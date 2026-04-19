@@ -1,0 +1,1 @@
+arrow = love.graphics.newImage("img/arrow.png");

@@ -1,0 +1,44 @@
+screenwidth,screenheight=love.window.getDesktopDimensions();
+gamewidth=1100;
+gameheight=580;
+windowwidth=gamewidth;
+windowheight=gameheight;
+love.window.setTitle("Super Epi Thets");
+love.window.setMode(gamewidth,gameheight,{
+	fullscreen=false;
+	resizable=true;
+	x=screenwidth/2 - (gamewidth*2/2);
+	y=screenheight/2 - (gameheight*2/2);
+	
+});
+mainfont = love.graphics.newFont("fonts/OpenDyslexic3-Bold.ttf",20);
+love.graphics.setFont(mainfont);
+
+require("util");
+require("canvas-stack");
+require("asyn");
+require("sound");
+require("commonui");
+require("clickable");
+require("button");
+require("pet");
+require("abilities");
+require("emptyslot");
+require("team");
+require("shops");
+require("field");
+require("run");
+require("battle");
+require("manager");
+require("game");
+game = Game();
+game.init();
+
+DEBUG_TEXT = "";
+
+function love.draw()
+    asyn.update();
+    --love.graphics.print("Hello World", 400, 300)
+    game.draw();
+    love.graphics.print(DEBUG_TEXT,4,4);
+end
