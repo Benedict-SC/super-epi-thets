@@ -10,10 +10,20 @@ Manager = function()
         if mng.selectedPet then
             game.run.gold = game.run.gold + mng.selectedPet.getSellPrice();
             game.team.removePet(mng.selectedPet);
+            mng.state = "ANIMATE";
+            mng.selectedPet.sell(function() 
+                mng.state = "SHOP";
+                mng.cleanupDrag(); 
+            end);
             mng.clearSelection();
         elseif mng.draggingPet then
             game.run.gold = game.run.gold + mng.draggingPet.getSellPrice();
             game.team.removePet(mng.draggingPet);
+            mng.state = "ANIMATE";
+            mng.draggingPet.sell(function() 
+                mng.state = "SHOP";
+                mng.cleanupDrag(); 
+            end);
             mng.cleanupDrag();
         end
     end
@@ -25,6 +35,7 @@ Manager = function()
         if game.run.gold > 0 then
             game.run.gold = game.run.gold - 1;
             game.petShop.roll(game.run.tier);
+            game.itemShop.roll(game.run.tier);
         end
     end
 
@@ -61,10 +72,41 @@ Manager = function()
     end
     mng.startTurn = function()
         --trigger start of turn abilities
-        mng.state == "SHOP";
+        mng.state = "SHOP";
+    end
+    mng.triggerRandom = function()
+        --interrupt/hijack current battle action to trigger random abilities
     end
 
     mng.selectPet = function(pet,fromShop)
+        mng.setAllIdle();
+        pet.inputState = "SELECTED";
+        mng.selectedPet = pet;
+        mng.selectedFood = nil;
+        mng.configureEmptySlots();
+    end
+    mng.selectFood = function(food)
+        mng.setAllIdle();
+        food.inputState = "SELECTED";
+        mng.selectedFood = food;
+        mng.selectedPet = nil;
+        --mng.configureEmptySlots() --maybe we do this when we get graham
+    end
+    mng.dragPet = function(pet,fromShop)
+        mng.setAllIdle();
+        pet.inputState = "DRAGGING";
+        mng.draggingPet = pet;
+        mng.draggingFood = nil;
+        mng.configureEmptySlots();
+    end
+    mng.dragFood = function(food,fromShop)
+        mng.setAllIdle();
+        food.inputState = "DRAGGING";
+        mng.draggingFood = food;
+        mng.draggingPet = nil;
+        --mng.configureEmptySlots();
+    end
+    mng.setAllIdle = function()
         for i=1,5,1 do
             local tpet = game.team.get(i);
             if tpet then
@@ -77,20 +119,10 @@ Manager = function()
                 tpet.inputState = "IDLE";
             end
         end
-        pet.inputState = "SELECTED";
-        mng.selectedPet = pet;
-        mng.configureEmptySlots();
-    end
-    mng.dragPet = function(pet,fromShop)
-        for i=1,5,1 do
-            local tpet = game.team.get(i);
-            if tpet then
-                tpet.inputState = "IDLE";
-            end
+        for i=1,#game.itemShop.contents,1 do
+            local food = game.itemShop.contents[i];
+            food.inputState = "IDLE";
         end
-        pet.inputState = "DRAGGING";
-        mng.draggingPet = pet;
-        mng.configureEmptySlots();
     end
     mng.buyPet = function(pet)
         local price = 3;
@@ -102,14 +134,36 @@ Manager = function()
         pet.fromShop = false;
         return true;
     end
+    mng.buyFood = function(food)
+        local price = 3;
+        --todo: handle cost reduction
+        if game.run.gold < price then
+            return false;
+        end
+        game.run.gold = game.run.gold - price;
+        game.itemShop.buy(food);
+        return true;
+    end
     mng.clearSelection = function()
-        mng.selectedPet.inputState = "IDLE";
+        if mng.selectedPet then
+            mng.selectedPet.inputState = "IDLE";
+        end
+        if mng.selectedFood then
+            mng.selectedFood.inputState = "IDLE";
+        end
         mng.selectedPet = nil;
+        mng.selectedFood = nil;
         mng.removeEmptySlots();
     end
     mng.cleanupDrag = function()
-        mng.draggingPet.inputState = "IDLE";
+        if mng.draggingPet then
+            mng.draggingPet.inputState = "IDLE";
+        end
+        if mng.draggingFood then
+            mng.draggingFood.inputState = "IDLE";
+        end
         mng.draggingPet = nil;
+        mng.draggingFood = nil;
         mng.removeEmptySlots();
     end
 
@@ -161,6 +215,13 @@ Manager = function()
             love.graphics.draw(mng.draggingPet.img,mx-50,my-50);
             love.graphics.setColor(0.95,0.33,0,1);
             love.graphics.print("" .. mng.draggingPet.getSellPrice(),mng.sellButton.x + 42,mng.sellButton.y + 45);
+            popColor();
+        end
+        if mng.draggingFood then
+            local mx, my = love.mouse.getPosition();
+            pushColor();
+            love.graphics.setColor(1,1,1,0.8);
+            love.graphics.draw(mng.draggingFood.img,mx-50,my-50);
             popColor();
         end
         if mng.selectedPet then

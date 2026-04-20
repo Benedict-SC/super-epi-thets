@@ -4,18 +4,23 @@ Game = function()
     game.run = Run();
     game.manager = Manager();
     game.petShop = PetShop();
+    game.itemShop = ItemShop();
+    game.abilityStack = AbilityStack();
 
     game.team = Team();
     --game.team.addNewPet("gorou");
-    --game.team.addNewPet("crapgorps");
-    --game.team.addNewPet("ben");
+    game.team.addNewPet("crapgorps");
+    game.team.addNewPet("giovanni");
     --game.team.addNewPet("crapgorps");
     --game.team.addNewPet("giovanni");
 
     game.enemyTeam = Team();
-    game.enemyTeam.addNewPet("wellwatcher",4)
-    game.enemyTeam.addNewPet("gansley",3)
+    game.enemyTeam.addNewPet("wellwatcher",5)
+    game.enemyTeam.get(5).addExp(1);
+    game.enemyTeam.addNewPet("gansley",4)
+    game.enemyTeam.addNewPet("simphony",2)
     game.enemyTeam.addNewPet("martin",1)
+    game.enemyTeam.get(1).addExp(2);
     game.enemyTeam.faceRight = false;
     game.enemyTeam.x = 960;
 
@@ -23,11 +28,13 @@ Game = function()
 
     game.init = function()
         game.petShop.roll(1);
+        game.itemShop.roll(1);
     end
 
     game.update = function()
         game.team.update();
         game.petShop.update();
+        game.itemShop.update();
         game.manager.update();
     end
     game.draw = function()
@@ -38,7 +45,11 @@ Game = function()
         game.enemyTeam.draw();
         if not game.manager.hideUI then
             game.petShop.draw();
+            game.itemShop.draw();
             game.manager.draw();
+        end
+        if game.manager.battle then
+            game.manager.battle.draw();
         end
         pushColor();
         love.graphics.setColor(0,0,0,game.fadeAlpha);

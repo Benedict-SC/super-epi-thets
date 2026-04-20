@@ -40,17 +40,76 @@ Battle = function(friendly,enemy)
         battle.resolveStep(function() battle.startBattle() end);
     end
     battle.startBattle = function()
-        --activate start of battle abilities
-        battle.resolveStep(function() battle.roundStart() end);
+        local all = battle.allPets();
+        local actions = Array();
+
+        for i=1,#all,1 do
+            local pet = all[i];
+            actions.push(function(done)
+                pet.startOfBattle(done);
+            end);
+        end
+
+        asyn.runSerial(actions, function()
+            battle.resolveStep(function()
+                battle.roundStart();
+            end);
+        end);
     end
+
     battle.roundStart = function()
-        --resolve "before attack" and "before first attack" abilities
-        battle.resolveStep(function() battle.attack() end);
+        local frontFriendly = battle.friendly.get(5);
+        local frontEnemy = battle.enemy.get(5);
+        local actions = Array();
+
+        if frontFriendly.atk >= frontEnemy.atk then
+            frontEnemy.allAbilities().forEach(function(el) 
+                if el.id == "beforeAttack" then
+                    game.abilityStack.registerAbilityTrigger(frontEnemy,"beforeAttack",el.func,frontFriendly);
+                end
+            end)
+            frontFriendly.allAbilities().forEach(function(el) 
+                if el.id == "beforeAttack" then
+                    game.abilityStack.registerAbilityTrigger(frontFriendly,"beforeAttack",el.func,frontEnemy);
+                end
+            end)
+        else
+            frontFriendly.allAbilities().forEach(function(el) 
+                if el.id == "beforeAttack" then
+                    game.abilityStack.registerAbilityTrigger(frontFriendly,"beforeAttack",el.func,frontEnemy);
+                end
+            end)
+            frontEnemy.allAbilities().forEach(function(el) 
+                if el.id == "beforeAttack" then
+                    game.abilityStack.registerAbilityTrigger(frontEnemy,"beforeAttack",el.func,frontFriendly);
+                end
+            end)
+        end
+        game.abilityStack.startProcessing(function()
+            battle.processFainting(function() 
+                battle.resolveStep(function() 
+                    if frontFriendly.fainted or frontEnemy.fainted then
+                        battle.roundEnd() 
+                    else
+                        battle.attack() 
+                    end
+                end); 
+            end);
+        end)
     end
+
     battle.attack = function()
         local dist = 40;
         local frontFriendly = battle.friendly.get(5);
         local frontEnemy = battle.enemy.get(5);
+        if (not frontFriendly) or (not frontEnemy) then
+            battle.processFainting(function() 
+                battle.resolveStep(function() 
+                    battle.roundEnd();
+                end); 
+            end);
+            return;
+        end
         --play a fight animation and then
         asyn.doOverTime(0.3,function(percent) 
             frontFriendly.x = dist*percent;
@@ -76,32 +135,47 @@ Battle = function(friendly,enemy)
             end);
         end);
     end
-    battle.dealDirectDamage = function(amount,source,target) 
+    battle.dealDirectDamage = function(amount,source,target,done) 
         local totalDamage = amount - target.defense();
-        local projectileImage = love.graphics.newImage(pet.projectileUrl);
+        if totalDamage < 0 then totalDamage = 0; end
+        local projectileImage = love.graphics.newImage(source.projectileUrl);
         local origin = source.screenCenter();
-        projectileImage.x = origin.x;
-        projectileImage.y = origin.y;
-        battle.extras.push(projectileImage);
+        origin.x = origin.x + 20;
+        local projectile = {img=projectileImage,x=origin.x,y=origin.y};
+        battle.extras.push(projectile);
         local destination = target.screenCenter();
-        asyn.doOverTime(0.8,function(percent) 
-            --todo: map the percent argument to values of projectileImage.x and y such that the image appears to launch up into the air and come back down on the destination.x and y, where percent is the percent of time through the animation.
+        destination.x = destination.x + 20;
+        asyn.doOverTime(0.6,function(percent) 
+            local dx = destination.x - origin.x;
+            local dy = destination.y - origin.y;
+            local arcHeight = 120;
+            projectile.x = origin.x + (dx * percent);
+            projectile.y = origin.y + (dy * percent) - (4 * arcHeight * percent * (1 - percent));
         end,function() 
-            battle.extras.removeElement(projectileImage);
+            battle.extras.removeElement(projectile);
             target.hp = target.hp - totalDamage;
-            if target.hp <= 0 then target.fainted = true; end
-            target.hurt(source);
+            if totalDamage == 0 then
+                done();
+            else 
+                if target.hp <= 0 then target.fainted = true; end
+                target.hurt(done,source);
+            end
         end);
     end
     battle.processFainting = function(done)
         local all = battle.allPets();
+        local faintActions = Array();
         for i=1,#all,1 do
             if all[i].hp <= 0 then
-                all[i].fainted = true;
+                local fainter = all[i];
+                fainter.fainted = true;
                 --trigger faint abilities
+                faintActions.push(function(whenDone)
+                    fainter.faint(whenDone);
+                end);
             end
         end
-        done();
+        asyn.runSerial(faintActions,done);
     end
     battle.roundEnd = function()
 
@@ -109,15 +183,20 @@ Battle = function(friendly,enemy)
         if check == 2 then
             battle.resolveStep(function() battle.roundStart() end);
         else
-            battle.finish(preCheck);
+            battle.finish(check);
         end
     end
     battle.finish = function(won)
         asyn.doOverTime(0.8,function(percent) 
             game.fadeAlpha = percent;
         end,function() 
-            --replace teams with instanced teams;
+            --replace teams with original teams;
             game.team = game.savedTeam;
+            for i=1,5,1 do
+                if game.team.get(i) then
+                    game.team.get(i).battlesFought = game.team.get(i).battlesFought + 1;
+                end
+            end
             game.enemyTeam = game.savedEnemyTeam;
             if won == 1 then
                 game.run.wins = game.run.wins + 1;
@@ -126,6 +205,7 @@ Battle = function(friendly,enemy)
             end
             game.run.newTurn();
             game.petShop.roll(game.run.tier);
+            game.itemShop.roll(game.run.tier);
             --hide UI
             game.manager.hideUI = false;
             --fade back in
@@ -165,8 +245,9 @@ Battle = function(friendly,enemy)
     battle.extras = Array();
     battle.draw = function()
         for i=1,#battle.extras,1 do
-            local img = battle.extras[i];
-            love.graphics.draw(img,img.x,img.y);
+            local extra = battle.extras[i];
+            if not extra then break; end
+            love.graphics.draw(extra.img,extra.x,extra.y);
         end
     end
 

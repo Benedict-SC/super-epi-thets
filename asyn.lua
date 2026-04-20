@@ -281,3 +281,20 @@ asyn.recenterCamera = function(secs,offset,funcwhendone)
 	return asyn.panToThing(game.player,secs,offset,funcwhendone);
 	
 end
+
+asyn.runSerial = function(actions, finalDone)
+    local index = 1
+
+    local function runNext()
+        if index > #actions then
+            if finalDone then finalDone() end
+            return
+        end
+
+        local action = actions[index]
+        index = index + 1
+        action(runNext)
+    end
+
+    runNext()
+end

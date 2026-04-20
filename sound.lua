@@ -56,6 +56,10 @@ sound.makeAndBank("biff","audio/biff.mp3",1,false,"static");
 sound.makeAndBank("hit","audio/hit.mp3",1,false,"static");
 sound.makeAndBank("oof","audio/oof.mp3",1,false,"static");
 sound.makeAndBank("whack","audio/whack.mp3",1,false,"static");
+sound.makeAndBank("wellwatch","audio/wellwatch.mp3",0.6,false,"static");
+sound.makeAndBank("thunder","audio/thunder.mp3",1,false,"static");
+sound.makeAndBank("danha","audio/danha.mp3",1,false,"static");
+sound.makeAndBank("danuhoh","audio/danuhoh.mp3",1,false,"static");
 sound.randomSmack = function()
     local types = {"bang","pow","biff","hit","oof","whack"};
     local picked = types[math.random(#types)];

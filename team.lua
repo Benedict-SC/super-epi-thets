@@ -35,6 +35,9 @@ Team = function()
         team.listBackToFront[pet1Index] = pet2;
         team.listBackToFront[pet2Index] = pet1;
     end
+    team.replacePet = function(pos,pet)
+        team.listBackToFront[pos] = pet;
+    end
     team.movePet = function(pet,newPos)
         local petIndex = pet.getIndex(team);
         team.listBackToFront[newPos] = pet;

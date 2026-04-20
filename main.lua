@@ -21,8 +21,11 @@ require("sound");
 require("commonui");
 require("clickable");
 require("button");
+require("perks");
 require("pet");
+require("food");
 require("abilities");
+require("abilitystack");
 require("emptyslot");
 require("team");
 require("shops");
@@ -40,5 +43,8 @@ function love.draw()
     asyn.update();
     --love.graphics.print("Hello World", 400, 300)
     game.draw();
+    pushColor();
+    love.graphics.setColor(0.1,0.8,0.4);
     love.graphics.print(DEBUG_TEXT,4,4);
+    popColor();
 end

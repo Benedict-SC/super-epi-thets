@@ -10,6 +10,7 @@ Pet = function(id)
     pet.hp = sourcePet.hp;
     pet.defense = function() return 0; end
     pet.tier = sourcePet.tier;
+    pet.perk = Perk();
 
     pet.imgUrl = sourcePet.img;
     pet.img = love.graphics.newImage(pet.imgUrl);
@@ -66,9 +67,13 @@ Pet = function(id)
         newPet.hp = pet.hp;
         newPet.xp = pet.xp;
         newPet.level = pet.level;
+        newPet.enemy = pet.enemy;
         newPet.battlesFought = pet.battlesFought;
         newPet.priceModifier = pet.priceModifier;
         return newPet;
+    end
+    pet.allAbilities = function()
+        return pet.abilities.concat(pet.perk.abilities);
     end
 
     pet.draw = function(xoff,yoff,xscale)
@@ -85,14 +90,44 @@ Pet = function(id)
                 love.graphics.draw(arrow,xoff + 80 + pet.x,yoff-20);
             end
         end
+        --draw stats
         love.graphics.setColor(1,1,1);
         love.graphics.draw(game.team.statsIndicator,xoff + 5 + pet.x, yoff + 90)
         love.graphics.setColor(0,0,0);
-        love.graphics.print("" .. pet.atk,xoff + 24 + pet.x, yoff + 91);
-        love.graphics.print("" .. pet.hp,xoff + 72 + pet.x, yoff + 89);
+        local atkOffset = (pet.atk > 9) and -6 or 0;
+        local hpOffset = (pet.hp > 9) and -6 or 0;
+        love.graphics.print("" .. pet.atk,xoff + 24 + pet.x + atkOffset, yoff + 91);
+        love.graphics.print("" .. pet.hp,xoff + 72 + pet.x + hpOffset, yoff + 89);
         love.graphics.setColor(1,1,1);
-        love.graphics.print("" .. pet.atk,xoff + 22 + pet.x, yoff + 89);
-        love.graphics.print("" .. pet.hp,xoff + 70 + pet.x, yoff + 87);
+        love.graphics.print("" .. pet.atk,xoff + 22 + pet.x + atkOffset, yoff + 89);
+        love.graphics.print("" .. pet.hp,xoff + 70 + pet.x + hpOffset, yoff + 87);
+        --draw level
+        if not pet.fromShop then
+            love.graphics.draw(levelbg,(xoff - 9) + pet.x, yoff - 16);
+            love.graphics.setColor(1,0.725,0);
+            if (pet.xp == 1) or (pet.xp > 2) then
+                love.graphics.circle("fill",xoff+1+pet.x,yoff+11,4);
+            end
+            if (pet.xp == 4) then
+                love.graphics.circle("fill",xoff+11+pet.x,yoff+11,4);
+            end
+            if pet.xp == 5 then
+                love.graphics.circle("fill",xoff+22+pet.x,yoff+11,4);
+                love.graphics.rectangle("fill",xoff+pet.x,yoff+7,22,8);
+            end
+            if (pet.xp < 2) then
+                love.graphics.setColor(0,0,0);
+                love.graphics.circle("fill",xoff+22+pet.x,yoff+11,6);
+            end
+            love.graphics.setColor(1,0.725,0);
+            love.graphics.print("" .. pet.level,xoff+14+pet.x,yoff-26);
+
+        end
+        --draw other stuff
+        love.graphics.setColor(1,1,1);
+        if pet.fainted then
+            love.graphics.draw(bandage,xoff+20,yoff+20);
+        end
         popColor();
     end
     pet.onMouseDown = function()
@@ -116,6 +151,22 @@ Pet = function(id)
                 local selected = game.manager.selectedPet;
                 pet.combineAction(selected);
                 game.manager.clearSelection();
+            elseif game.manager.selectedFood then
+                if not pet.fromShop then
+                    local didBuy = game.manager.buyFood(game.manager.selectedFood);
+                    if didBuy then
+                        game.manager.selectedFood.eat(pet);
+                    end
+                end
+                game.manager.clearSelection();
+            elseif game.manager.draggingFood then
+                if not pet.fromShop then
+                    local didBuy = game.manager.buyFood(game.manager.draggingFood);
+                    if didBuy then
+                        game.manager.draggingFood.eat(pet);
+                    end
+                end
+                game.manager.cleanupDrag();
             end
         end
     end
@@ -164,7 +215,10 @@ Pet = function(id)
             end
         end
     end
-    pet.getIndex = function(team)
+    pet.getTeam = function()
+        return pet.enemy and game.enemyTeam or game.team;
+    end
+    pet.getIndexOnTeam = function(team)
         for i=1,5,1 do
             local tpet = team.listBackToFront[i];
             if tpet == pet then
@@ -172,6 +226,10 @@ Pet = function(id)
             end
         end
         return 0;
+    end
+    pet.getIndex = function()
+        local team = pet.getTeam();
+        return pet.getIndexOnTeam(team);
     end
     pet.screenCenter = function()
         local team = pet.enemy and game.enemyTeam or game.team;
@@ -182,6 +240,7 @@ Pet = function(id)
     end
     pet.transform = function(newId)
         local template = PetMap[newId];
+        pet.id = newId;
         pet.name = template.name;
         pet.img = love.graphics.newImage(template.img);
         pet.tier = template.tier;
@@ -276,6 +335,34 @@ PetMap["bugsy"] = {
     hp = 5;
     img = "img/char/bugsy.png";
     tier = 2;
+}
+PetMap["mera"] = {
+    name = "Mera";
+    atk = 3;
+    hp = 4;
+    img = "img/char/mera.png";
+    tier = 3;
+}
+PetMap["howdy"] = {
+    name = "Howdy";
+    atk = 5;
+    hp = 3;
+    img = "img/char/howdy.png";
+    tier = 4;
+}
+PetMap["indus"] = {
+    name = "Indus";
+    atk = 8;
+    hp = 5;
+    img = "img/char/indus.png";
+    tier = 5;
+}
+PetMap["jolteon"] = {
+    name = "Jolteon";
+    atk = 10;
+    hp = 6;
+    img = "img/char/jolteon.png";
+    tier = 6;
 }
 PetTiers = {Array(),Array(),Array(),Array(),Array(),Array()};
 for k,v in pairs(PetMap) do

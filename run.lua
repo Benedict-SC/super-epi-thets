@@ -17,6 +17,13 @@ Run = function()
         run.turn = run.turn + 1;
         run.gold = 10 + run.extraGoldNextTurn;
         run.extraGoldNextTurn = 0;
+        if run.turn == 5 then 
+            run.shopSlots = 4;
+            run.itemSlots = 2;
+        end
+        if run.turn == 9 then 
+            run.shopSlots = 5;
+        end
         run.tier = 1 + math.floor((run.turn - 1)/2);
         if run.tier > 6 then run.tier = 6; end
     end
