@@ -43,27 +43,29 @@ Manager = function()
     mng.endButton.x = 680;
     mng.endButton.y = 10;
     mng.endButton.onMouseUp = function()
-        game.run.endTurn();
-        mng.state = "BATTLE";
-        asyn.doOverTime(0.8,function(percent) 
-            game.fadeAlpha = percent;
-        end,function() 
-            --replace teams with instanced teams;
-            game.savedTeam = game.team;
-            game.savedEnemyTeam = game.enemyTeam;
-            game.team = game.team.getCopy();
-            game.enemyTeam = game.enemyTeam.getCopy();
-            --hide UI
-            mng.hideUI = true;
-            --fade back in
+        if mng.state == "SHOP" then
+            game.run.endTurn();
+            mng.state = "BATTLE";
             asyn.doOverTime(0.8,function(percent) 
-                game.fadeAlpha = 1-percent;
+                game.fadeAlpha = percent;
             end,function() 
-                game.fadeAlpha = 0;
-                --start the battle
-                mng.startBattle();
-            end);
-        end)
+                --replace teams with instanced teams;
+                game.savedTeam = game.team;
+                game.savedEnemyTeam = game.enemyTeam;
+                game.team = game.team.getCopy();
+                game.enemyTeam = game.enemyTeam.getCopy();
+                --hide UI
+                mng.hideUI = true;
+                --fade back in
+                asyn.doOverTime(0.8,function(percent) 
+                    game.fadeAlpha = 1-percent;
+                end,function() 
+                    game.fadeAlpha = 0;
+                    --start the battle
+                    mng.startBattle();
+                end);
+            end)
+        end
     end
     
     mng.startBattle = function()
@@ -72,10 +74,32 @@ Manager = function()
     end
     mng.startTurn = function()
         --trigger start of turn abilities
-        mng.state = "SHOP";
+        local all = game.team.getAllPets();
+        local actions = Array();
+        for i=#all,1,-1 do
+            local pet = all[i];
+            pet.allAbilities().forEach(function(el) 
+                if el.id == "startOfTurn" then
+                    game.abilityStack.registerAbilityTrigger(pet,"startOfTurn",el.func,args);
+                end
+            end);
+        end
+        game.abilityStack.startProcessing(function()
+            mng.state = "SHOP";
+        end);
     end
     mng.triggerRandom = function()
         --interrupt/hijack current battle action to trigger random abilities
+    end
+    mng.flushStack = function()
+        if (#game.abilityStack.stack > 0) and not game.abilityStack.callbackSet then
+            mng.state = "ANIMATE";
+            game.abilityStack.startProcessing(function() 
+                mng.state = "SHOP";
+            end);
+        else 
+            return;
+        end
     end
 
     mng.selectPet = function(pet,fromShop)

@@ -37,24 +37,18 @@ Battle = function(friendly,enemy)
     end
     battle.beforeBattle = function()
         --activate before battle abilities
-        battle.resolveStep(function() battle.startBattle() end);
+        battle.triggerForAll("beforeBattle",nil,function()
+            battle.resolveStep(function()
+                battle.startBattle();
+            end);
+        end)
     end
     battle.startBattle = function()
-        local all = battle.allPets();
-        local actions = Array();
-
-        for i=1,#all,1 do
-            local pet = all[i];
-            actions.push(function(done)
-                pet.startOfBattle(done);
-            end);
-        end
-
-        asyn.runSerial(actions, function()
+        battle.triggerForAll("startOfBattle",nil,function()
             battle.resolveStep(function()
                 battle.roundStart();
             end);
-        end);
+        end)
     end
 
     battle.roundStart = function()
@@ -115,8 +109,8 @@ Battle = function(friendly,enemy)
             frontFriendly.x = dist*percent;
             frontEnemy.x = -1*dist*percent;
         end,function() 
-            local fdmg = frontFriendly.atk; --modify this by defense-related perks
-            local edmg = frontEnemy.atk; --ditto
+            local fdmg = frontFriendly.atk + frontFriendly.perk.damageMod - frontEnemy.defense(); --modify this by defense-related perks
+            local edmg = frontEnemy.atk + frontEnemy.perk.damageMod - frontFriendly.defense(); --ditto
             frontFriendly.hp = frontFriendly.hp - edmg;
             frontEnemy.hp = frontEnemy.hp - fdmg;
             sound.randomSmack();
@@ -127,10 +121,13 @@ Battle = function(friendly,enemy)
                 frontFriendly.x = 0;
                 frontEnemy.x = 0;
                 --activate hurt abilities if fdmg/edmg are positive
-                battle.processFainting(function() 
-                    battle.resolveStep(function() 
-                        battle.roundEnd() 
-                    end); 
+                battle.triggerForAll("anyoneAttacked",nil,nil,true)
+                battle.triggerForCombatants({ff=frontFriendly,fe=frontEnemy},"afterAttack",nil,function()
+                    battle.processFainting(function() 
+                        battle.resolveStep(function() 
+                            battle.roundEnd() 
+                        end); 
+                    end);
                 end);
             end);
         end);
@@ -157,25 +154,32 @@ Battle = function(friendly,enemy)
             if totalDamage == 0 then
                 done();
             else 
-                if target.hp <= 0 then target.fainted = true; end
-                target.hurt(done,source);
+                target.triggerOne("hurt",source,done);
             end
         end);
     end
     battle.processFainting = function(done)
         local all = battle.allPets();
-        local faintActions = Array();
         for i=1,#all,1 do
-            if all[i].hp <= 0 then
+            if (all[i].hp <= 0) and (not all[i].fainted) then
                 local fainter = all[i];
                 fainter.fainted = true;
-                --trigger faint abilities
-                faintActions.push(function(whenDone)
-                    fainter.faint(whenDone);
+                fainter.allAbilities().forEach(function(el)
+                    if el.id == "faint" then
+                        game.abilityStack.registerAbilityTrigger(fainter,"faint",el.func);
+                    end
+                end);
+                local teammates = fainter.getTeam().getAllPets();
+                teammates.forEach(function(tm) 
+                    tm.allAbilities().forEach(function(el) 
+                        if el.id == "friendFaints" and not (tm == fainter) then
+                            game.abilityStack.registerAbilityTrigger(tm,"friendFaints",el.func,fainter);
+                        end
+                    end);
                 end);
             end
         end
-        asyn.runSerial(faintActions,done);
+        game.abilityStack.startProcessing(done);
     end
     battle.roundEnd = function()
 
@@ -241,6 +245,52 @@ Battle = function(friendly,enemy)
             return p1.atk > p2.atk;
         end);
         return all;
+    end
+    battle.triggerForAll = function(triggerType,args,done,defer)
+        local all = battle.allPets();
+        local actions = Array();
+        for i=#all,1,-1 do
+            local pet = all[i];
+            pet.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    game.abilityStack.registerAbilityTrigger(pet,triggerType,el.func,args);
+                end
+            end);
+        end
+        if not defer then
+            game.abilityStack.startProcessing(done);
+        end
+    end
+    battle.triggerForCombatants = function(combatants,triggerType,args,done,defer)
+        if not combatants then combatants = {}; end
+        local frontFriendly = combatants.ff or battle.friendly.get(5);
+        local frontEnemy = combatants.fe or battle.enemy.get(5);
+        if frontFriendly.atk >= frontEnemy.atk then
+            frontEnemy.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    game.abilityStack.registerAbilityTrigger(frontEnemy,triggerType,el.func,frontFriendly);
+                end
+            end)
+            frontFriendly.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    game.abilityStack.registerAbilityTrigger(frontFriendly,triggerType,el.func,frontEnemy);
+                end
+            end)
+        else
+            frontFriendly.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    game.abilityStack.registerAbilityTrigger(frontFriendly,triggerType,el.func,frontEnemy);
+                end
+            end)
+            frontEnemy.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    game.abilityStack.registerAbilityTrigger(frontEnemy,triggerType,el.func,frontFriendly);
+                end
+            end)
+        end
+        if not defer then
+            game.abilityStack.startProcessing(done);
+        end
     end
     battle.extras = Array();
     battle.draw = function()

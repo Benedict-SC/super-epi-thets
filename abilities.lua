@@ -10,6 +10,8 @@ giveAbilitiesToPet = function(pet,copying)
     pet.hurt = function(done,source) done(); end
     pet.afterAttack = function(done,opponent) done(); end
     pet.faint = function(done) done(); end
+    pet.friendFaints = function(done,friend) done(); end
+    pet.gainedAilment = function(done,ailment) done(); end
     pet.friendGainedAilment = function(done,friend) done(); end
     pet.spentGoldPastTen = function(done,gold) done(); end
     pet.randomThingHappens = function(done) done(); end
@@ -20,9 +22,9 @@ giveAbilitiesToPet = function(pet,copying)
     pet.fedToFriend = function(done,friend) done(); end
     pet.friendBehindHurt = function(done,friend) done(); end
     pet.friendAheadHurt = function(done,friend) done(); end
-    pet.friendFaints = function(done,friend) done(); end
     pet.twoFriendsAttack = function(done) done(); end
     pet.somethingFlewOverhead = function(done) done(); end
+    pet.anyoneAttacked = function(done) done(); end
     pet.abilities = Array();
 
     if pet.id == "ben" then
@@ -63,6 +65,19 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}});
     elseif pet.id == "giovanni" then
         pet.startOfTurn = function(done)
+            local types1 = ArrayFromRawArray({"waterysoup","toohot"});
+            --local types2 = ArrayFromRawArray({"spellemup","oftheday"});
+            --local types3 = ArrayFromRawArray({"cocoasoup","lavacid"});
+            local types = types1;
+            --[[if pet.level > 1 then
+                types = types.concat(types2);
+            end
+            if pet.level > 2 then
+                types = types.concat(types3);
+            end]]--
+            local soupType = types[math.random(#types)];
+
+            game.itemShop.stock(soupType);
             game.manager.triggerRandom();
             done();
         end
@@ -74,6 +89,22 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="startOfTurn",func = pet.startOfTurn}})
     elseif pet.id == "flamethrower" then
         pet.beforeAttack = function(done,opponent)
+            local toasty1 = ToastyAilment();
+            opponent.gainPerk(toasty1);
+            if pet.level > 1 then
+                local opp2 = pet.getXthOpponentAhead(2);
+                if opp2 then
+                    local toasty2 = ToastyAilment();
+                    opp2.gainPerk(toasty2)
+                end
+            end
+            if pet.level > 2 then
+                local opp3 = pet.getXthOpponentAhead(3);
+                if opp3 then
+                    local toasty3 = ToastyAilment();
+                    opp3.gainPerk(toasty3)
+                end
+            end
             done();
         end
         pet.abilityText = {
@@ -84,8 +115,20 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
     elseif pet.id == "martin" then
         pet.friendGainedAilment = function(done,friend)
-            game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
-            done();
+            if not pet.enemy then
+                game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
+            end
+            local pos = pet.screenCenter();
+            local coin = {img=love.graphics.newImage("img/coin.png"),x=pos.x+50,y=pos.y};
+            game.manager.battle.extras.push(coin);
+            asyn.doOverTime(0.4,function(percent) 
+                coin.y = math.floor(pos.y - (percent*60));
+            end,function() 
+                asyn.wait(0.2,function() 
+                    game.manager.battle.extras.removeElement(coin);
+                    done();
+                end)
+            end)
         end
         pet.abilityText = {
             "Friend gained ailment: Gain 1 gold next turn.",
@@ -184,5 +227,16 @@ giveAbilitiesToPet = function(pet,copying)
             "Sell: Stock one Donut Gun with triple effect."
         }
         pet.abilities = ArrayFromRawArray({{id="sell",func = pet.sell}})
+    elseif pet.id == "simphony" then
+        pet.friendFaints = function(done,friend)
+            pet.hp = pet.hp + 1 + ((pet.level-1)*2);
+            done();
+        end
+        pet.abilityText = {
+            "Friend faints: Gain 1 HP.",
+            "Friend faints: Gain 3 HP.",
+            "Friend faints: Gain 5 HP."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendFaints",func = pet.friendFaints}})
     end
 end

@@ -12,6 +12,9 @@ Pet = function(id)
     pet.tier = sourcePet.tier;
     pet.perk = Perk();
 
+    pet.tempAtk = 0;
+    pet.tempHp = 0;
+
     pet.imgUrl = sourcePet.img;
     pet.img = love.graphics.newImage(pet.imgUrl);
     pet.projectileUrl = "img/rock.png";
@@ -34,6 +37,10 @@ Pet = function(id)
             local highestHp = math.max(pet.hp,otherPet.hp);
             pet.atk = highestAtk;
             pet.hp = highestHp;
+            if pet.perk.id == "default" and otherPet.perk.id ~= "default" then
+                pet.perk = otherPet.perk;
+                pet.perk.owner = pet;
+            end
             pet.addExp(1);
         end
     end
@@ -58,22 +65,61 @@ Pet = function(id)
             return;
         end
     end
+    pet.losePerk = function()
+        if pet.perk.lostPerk then
+            game.abilityStack.registerAbilityTrigger(pet,"lostPerk",pet.perk.lostPerk)
+        end
+        pet.perk = Perk();
+    end
+    pet.gainPerk = function(perk)
+        pet.losePerk();
+        pet.perk = perk;
+        pet.perk.owner = pet;
+        if perk.isAilment then
+            pet.allAbilities().forEach(function(el) 
+                if el.id == "gainedAilment" then
+                    game.abilityStack.registerAbilityTrigger(pet,"gainedAilment",el.func,perk);
+                end
+            end);
+            local teammates = pet.getTeam().getAllPets();
+            teammates.forEach(function(tm) 
+                tm.allAbilities().forEach(function(el) 
+                    if el.id == "friendGainedAilment" and not (tm == pet) then
+                        game.abilityStack.registerAbilityTrigger(tm,"friendGainedAilment",el.func,perk);
+                    end
+                end);
+            end);
+            game.abilityStack.startProcessing();
+        else
+            --here's where we'd trigger gained-perk effects... TIMMY TURNER'S DAD MEME!!!
+        end
+    end
     pet.fling = function(pos)
 
     end
     pet.getCopy = function()
         local newPet = Pet(pet.id);
-        newPet.atk = pet.atk;
-        newPet.hp = pet.hp;
+        newPet.atk = pet.atk + pet.tempAtk;
+        newPet.hp = pet.hp + pet.tempHp;
         newPet.xp = pet.xp;
         newPet.level = pet.level;
         newPet.enemy = pet.enemy;
         newPet.battlesFought = pet.battlesFought;
         newPet.priceModifier = pet.priceModifier;
+        newPet.perk = pet.perk.copy();
+        newPet.perk.owner = newPet;
         return newPet;
     end
     pet.allAbilities = function()
         return pet.abilities.concat(pet.perk.abilities);
+    end
+    pet.triggerOne = function(triggerType,args,done)
+        pet.allAbilities().forEach(function(el) 
+            if el.id == triggerType then
+                game.abilityStack.registerAbilityTrigger(pet,triggerType,el.func,args);
+            end
+        end);
+        game.abilityStack.startProcessing(done);
     end
 
     pet.draw = function(xoff,yoff,xscale)
@@ -96,11 +142,17 @@ Pet = function(id)
         love.graphics.setColor(0,0,0);
         local atkOffset = (pet.atk > 9) and -6 or 0;
         local hpOffset = (pet.hp > 9) and -6 or 0;
-        love.graphics.print("" .. pet.atk,xoff + 24 + pet.x + atkOffset, yoff + 91);
-        love.graphics.print("" .. pet.hp,xoff + 72 + pet.x + hpOffset, yoff + 89);
+        love.graphics.print("" .. (pet.atk + pet.tempAtk),xoff + 24 + pet.x + atkOffset, yoff + 91);
+        love.graphics.print("" .. (pet.hp + pet.tempHp),xoff + 72 + pet.x + hpOffset, yoff + 89);
         love.graphics.setColor(1,1,1);
-        love.graphics.print("" .. pet.atk,xoff + 22 + pet.x + atkOffset, yoff + 89);
-        love.graphics.print("" .. pet.hp,xoff + 70 + pet.x + hpOffset, yoff + 87);
+        love.graphics.print("" .. (pet.atk + pet.tempAtk),xoff + 22 + pet.x + atkOffset, yoff + 89);
+        love.graphics.print("" .. (pet.hp + pet.tempHp),xoff + 70 + pet.x + hpOffset, yoff + 87);
+        if pet.tempAtk > 0 then
+            love.graphics.rectangle("fill",xoff+22+pet.x+atkOffset,yoff+89+36,15,3);
+        end
+        if pet.tempHp > 0 then
+            love.graphics.rectangle("fill",xoff+70+pet.x+atkOffset,yoff+87+36,15,3);
+        end
         --draw level
         if not pet.fromShop then
             love.graphics.draw(levelbg,(xoff - 9) + pet.x, yoff - 16);
@@ -123,8 +175,10 @@ Pet = function(id)
             love.graphics.print("" .. pet.level,xoff+14+pet.x,yoff-26);
 
         end
-        --draw other stuff
         love.graphics.setColor(1,1,1);
+        --draw perk
+            love.graphics.draw(pet.perk.img,xoff+10+pet.x,yoff+60+pet.y);
+        --draw other stuff
         if pet.fainted then
             love.graphics.draw(bandage,xoff+20,yoff+20);
         end
@@ -147,15 +201,18 @@ Pet = function(id)
                 local dragged = game.manager.draggingPet;
                 pet.combineAction(dragged);
                 game.manager.cleanupDrag();
+                game.manager.flushStack();
             elseif game.manager.selectedPet and game.manager.selectedPet ~= pet then
                 local selected = game.manager.selectedPet;
                 pet.combineAction(selected);
                 game.manager.clearSelection();
+                game.manager.flushStack();
             elseif game.manager.selectedFood then
                 if not pet.fromShop then
                     local didBuy = game.manager.buyFood(game.manager.selectedFood);
                     if didBuy then
                         game.manager.selectedFood.eat(pet);
+                        game.manager.flushStack();
                     end
                 end
                 game.manager.clearSelection();
@@ -164,6 +221,7 @@ Pet = function(id)
                     local didBuy = game.manager.buyFood(game.manager.draggingFood);
                     if didBuy then
                         game.manager.draggingFood.eat(pet);
+                        game.manager.flushStack();
                     end
                 end
                 game.manager.cleanupDrag();
@@ -218,6 +276,9 @@ Pet = function(id)
     pet.getTeam = function()
         return pet.enemy and game.enemyTeam or game.team;
     end
+    pet.getEnemyTeam = function()
+        return pet.enemy and game.team or game.enemyTeam;
+    end
     pet.getIndexOnTeam = function(team)
         for i=1,5,1 do
             local tpet = team.listBackToFront[i];
@@ -230,6 +291,20 @@ Pet = function(id)
     pet.getIndex = function()
         local team = pet.getTeam();
         return pet.getIndexOnTeam(team);
+    end
+    pet.getXthOpponentAhead = function(x)
+        local eteam = pet.getEnemyTeam();
+        local count = 0;
+        for i=5,1,-1 do
+            local ene = eteam.get(i);
+            if ene then
+                count = count + 1;
+                if count == x then
+                    return ene;
+                end
+            end
+        end
+        return nil;
     end
     pet.screenCenter = function()
         local team = pet.enemy and game.enemyTeam or game.team;

@@ -10,17 +10,17 @@ Game = function()
     game.team = Team();
     --game.team.addNewPet("gorou");
     game.team.addNewPet("crapgorps");
-    game.team.addNewPet("giovanni");
+    game.team.addNewPet("gorou");
     --game.team.addNewPet("crapgorps");
     --game.team.addNewPet("giovanni");
 
     game.enemyTeam = Team();
-    game.enemyTeam.addNewPet("wellwatcher",5)
-    game.enemyTeam.get(5).addExp(1);
-    game.enemyTeam.addNewPet("gansley",4)
-    game.enemyTeam.addNewPet("simphony",2)
     game.enemyTeam.addNewPet("martin",1)
     game.enemyTeam.get(1).addExp(2);
+    game.enemyTeam.addNewPet("gansley",4)
+    game.enemyTeam.addNewPet("simphony",2)
+    game.enemyTeam.addNewPet("flamethrower",5)
+    game.enemyTeam.get(5).addExp(1);
     game.enemyTeam.faceRight = false;
     game.enemyTeam.x = 960;
 

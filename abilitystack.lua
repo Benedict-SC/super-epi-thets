@@ -5,8 +5,12 @@ AbilityStack = function()
         aStack.stack.push({src=sourcePet,type=abilityType,func=abilityFunction,args=args});
     end
     aStack.allCompleteCallback = function() end
+    aStack.callbackSet = false;
     aStack.startProcessing = function(allCompleteCallback)
-        aStack.allCompleteCallback = allCompleteCallback;
+        if allCompleteCallback and (not aStack.callbackSet) and (not (allCompleteCallback == aStack.processNext)) then
+            aStack.allCompleteCallback = allCompleteCallback;
+            aStack.callbackSet = true;
+        end
         aStack.processNext();
     end
     aStack.processNext = function()
@@ -14,7 +18,10 @@ AbilityStack = function()
             local ability = aStack.stack.pop();
             ability.func(aStack.processNext,ability.args);
         else
-            aStack.allCompleteCallback();
+            local completeCallback = aStack.allCompleteCallback;
+            aStack.allCompleteCallback = function() end
+            aStack.callbackSet = false;
+            completeCallback();
         end
     end
     return aStack;

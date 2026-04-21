@@ -142,6 +142,8 @@ Team = function()
             local pet = team.listBackToFront[i];
             if pet then
                 newTeam.listBackToFront[i] = pet.getCopy();
+                pet.tempAtk = 0;
+                pet.tempHp = 0;
             end
         end
         return newTeam;

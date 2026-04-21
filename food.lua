@@ -81,11 +81,24 @@ FoodMap["honeyedsnack"] = {
     eat = function(pet)
     end
 }
+FoodMap["waterysoup"] = {
+    name = "Watery Soup";
+    img = "img/food/waterysoup.png";
+    tier = 1;
+    eat = function(pet)
+        pet.tempAtk = pet.tempAtk + 2;
+        pet.tempHp = pet.tempHp + 2;
+        pet.ateFood(function() end,1);
+    end
+}
 FoodMap["donutgun1"] = {
     name = "Donut Gun";
     img = "img/food/donutgun.png";
     tier = 2;
     eat = function(pet)
+        local gunperk = DonutGunPerk(1);
+        pet.gainPerk(gunperk);
+        pet.ateFood(function() end,2);
     end;
 }
 FoodMap["donutgun2"] = {
@@ -93,6 +106,9 @@ FoodMap["donutgun2"] = {
     img = "img/food/donutgun.png";
     tier = 2;
     eat = function(pet)
+        local gunperk = DonutGunPerk(2);
+        pet.gainPerk(gunperk);
+        pet.ateFood(function() end,2);
     end;
     notBuyable = true;
 }
@@ -101,8 +117,23 @@ FoodMap["donutgun3"] = {
     img = "img/food/donutgun.png";
     tier = 2;
     eat = function(pet)
+        local gunperk = DonutGunPerk(3);
+        pet.gainPerk(gunperk);
+        pet.ateFood(function() end,2);
     end;
     notBuyable = true;
+}
+FoodMap["toohot"] = {
+    name = "Soup that is Too Hot";
+    img = "img/food/toohot.png";
+    tier = 2;
+    eat = function(pet)
+        pet.hp = pet.hp - 2;
+        if pet.hp < 1 then pet.hp = 1; end
+        local hotperk = HotHotHotPerk();
+        pet.gainPerk(hotperk);
+        pet.ateFood(function() end,2);
+    end;
 }
 FoodMap["betterapple"] = {
     name = "Better Apple";
