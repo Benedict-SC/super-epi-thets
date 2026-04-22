@@ -38,11 +38,22 @@ ToastyAilment = function()
     toast.isAilment = true;
     toast.anyoneAttacked = function(done)
         toast.owner.hp = toast.owner.hp - 1;
-        toast.owner.triggerOne("hurt")
+        toast.owner.triggerOne("hurt",{source=nil,dmg=1});
         toast.owner.losePerk();
         done();
     end
     toast.abilities.push({id="anyoneAttacked",func=toast.anyoneAttacked})
     toast.copy = function() return ToastyAilment(); end
     return toast;
+end
+FragileAilment = function()
+    local fragile = Perk("fragile");
+    fragile.isAilment = true;
+    fragile.hurt = function(done,sourceAndAmount)
+        fragile.owner.hp = fragile.owner.hp - sourceAndAmount.dmg; --double damage done
+        done();
+    end
+    fragile.abilities.push({id="hurt",func=fragile.hurt});
+    fragile.copy = function() return FragileAilment(); end
+    return fragile;
 end

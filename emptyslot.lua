@@ -14,6 +14,7 @@ EmptySlot = function(index)
                 else
                     local success = game.manager.buyPet(pet);
                     if (success) then
+                        pet.frozen = false;
                         game.team.addExistingPet(pet,slot.pos);
                         game.petShop.buy(pet)
                         pet.inputState = "IDLE";
@@ -28,6 +29,7 @@ EmptySlot = function(index)
                 else
                     local success = game.manager.buyPet(pet);
                     if (success) then
+                        pet.frozen = false;
                         game.team.addExistingPet(pet,slot.pos);
                         game.petShop.buy(pet)
                         pet.inputState = "IDLE";

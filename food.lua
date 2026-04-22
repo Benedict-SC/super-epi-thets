@@ -5,6 +5,7 @@ Food = function(id)
     food.name = sourceFood.name;
     food.tier = sourceFood.tier;
     food.eat = sourceFood.eat;
+    food.frozen = false;
 
     food.imgUrl = sourceFood.img;
     food.img = love.graphics.newImage(food.imgUrl);
@@ -28,6 +29,11 @@ Food = function(id)
                 love.graphics.draw(arrow,xoff + 80 + food.x,yoff-20);
             end
         end
+        love.graphics.setColor(1,1,1);
+        if food.frozen then
+            love.graphics.draw(ice,xoff+food.x,yoff+food.y);
+        end
+        love.graphics.draw(dice[food.tier],xoff+food.x,yoff+food.y-5);
         popColor();
     end
     food.onMouseDown = function()
@@ -44,6 +50,11 @@ Food = function(id)
             elseif food.inputState == "SELECTED" then
                 game.manager.clearSelection();
             end
+        end
+    end
+    food.onRightMouseUp = function()
+        if game.manager.state == "SHOP" then
+            food.frozen = not food.frozen;
         end
     end
     food.onHoverExit = function()

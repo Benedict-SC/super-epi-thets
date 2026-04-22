@@ -8,7 +8,7 @@ Game = function()
     game.abilityStack = AbilityStack();
 
     game.team = Team();
-    --game.team.addNewPet("gorou");
+    game.team.addNewPet("mera");
     game.team.addNewPet("crapgorps");
     game.team.addNewPet("gorou");
     --game.team.addNewPet("crapgorps");
@@ -19,8 +19,9 @@ Game = function()
     game.enemyTeam.get(1).addExp(2);
     game.enemyTeam.addNewPet("gansley",4)
     game.enemyTeam.addNewPet("simphony",2)
-    game.enemyTeam.addNewPet("flamethrower",5)
+    game.enemyTeam.addNewPet("crapgorps",5)
     game.enemyTeam.get(5).addExp(1);
+    game.enemyTeam.get(5).hp = 13;
     game.enemyTeam.faceRight = false;
     game.enemyTeam.x = 960;
 

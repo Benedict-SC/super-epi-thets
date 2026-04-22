@@ -7,7 +7,7 @@ giveAbilitiesToPet = function(pet,copying)
     pet.startOfBattle = function(done) done(); end
     pet.beforeBattle = function(done) done(); end
     pet.beforeAttack = function(done,opponent) done(); end
-    pet.hurt = function(done,source) done(); end
+    pet.hurt = function(done,sourceAndAmount) done(); end
     pet.afterAttack = function(done,opponent) done(); end
     pet.faint = function(done) done(); end
     pet.friendFaints = function(done,friend) done(); end
@@ -184,8 +184,8 @@ giveAbilitiesToPet = function(pet,copying)
                     local dmg = pet.level == 3 and 10 or (pet.level == 2 and 6 or 3);
                     game.manager.battle.dealDirectDamage(dmg,newWatcher,newWatcher,newdone);
                 end
-                newWatcher.hurt = function(newdone,source)
-                    if source == newWatcher then
+                newWatcher.hurt = function(newdone,sourceAndAmount)
+                    if source.source == newWatcher then
                         newWatcher.transform("skywatcher");
                         asyn.wait(0.4,newdone);
                     else
@@ -238,5 +238,26 @@ giveAbilitiesToPet = function(pet,copying)
             "Friend faints: Gain 5 HP."
         }
         pet.abilities = ArrayFromRawArray({{id="friendFaints",func = pet.friendFaints}})
+    elseif pet.id == "mera" then
+        pet.hurt = function(done,sourceAndAmount)
+            local selfFragile = FragileAilment();
+            pet.gainPerk(selfFragile);
+            for i=1,pet.level,1 do
+                local opp = pet.getXthOpponentAhead(i);
+                if opp then
+                    local frag = FragileAilment();
+                    opp.gainPerk(frag);
+                end
+            end
+            done();
+        end
+        pet.abilityText = {
+            "Hurt: Apply Fragile to self and first enemy ahead.",
+            "Hurt: Apply Fragile to self and first two enemies ahead.",
+            "Hurt: Apply Fragile to self and first three enemies ahead."
+        }
+        pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
+    elseif pet.id == "howdy" then
+
     end
 end

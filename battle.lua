@@ -122,13 +122,15 @@ Battle = function(friendly,enemy)
                 frontEnemy.x = 0;
                 --activate hurt abilities if fdmg/edmg are positive
                 battle.triggerForAll("anyoneAttacked",nil,nil,true)
-                battle.triggerForCombatants({ff=frontFriendly,fe=frontEnemy},"afterAttack",nil,function()
+                battle.triggerForCombatants({ff=frontFriendly,fe=frontEnemy},"afterAttack",nil,nil,true);
+                frontFriendly.triggerOne("hurt",{source=frontEnemy,dmg=edmg},nil,true)
+                frontEnemy.triggerOne("hurt",{source=frontFriendly,dmg=fdmg},function()
                     battle.processFainting(function() 
                         battle.resolveStep(function() 
                             battle.roundEnd() 
                         end); 
                     end);
-                end);
+                end)
             end);
         end);
     end
@@ -154,7 +156,7 @@ Battle = function(friendly,enemy)
             if totalDamage == 0 then
                 done();
             else 
-                target.triggerOne("hurt",source,done);
+                target.triggerOne("hurt",{source=source,dmg=totalDamage},done);
             end
         end);
     end

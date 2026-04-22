@@ -10,6 +10,7 @@ Pet = function(id)
     pet.hp = sourcePet.hp;
     pet.defense = function() return 0; end
     pet.tier = sourcePet.tier;
+    pet.frozen = false;
     pet.perk = Perk();
 
     pet.tempAtk = 0;
@@ -127,7 +128,7 @@ Pet = function(id)
         if pet.inputState == "DRAGGING" then
             love.graphics.setColor(0,0,0);
         end
-        love.graphics.draw(pet.img,xoff+ ((xscale == -1) and 100 or 0) + pet.x,yoff,0,xscale,1);
+        love.graphics.draw(pet.img,xoff+ ((xscale == -1) and 100 or 0) + pet.x,yoff+pet.y,0,xscale,1);
         if game.manager.state == "SHOP" then
             if pet.hovered or pet.inputState == "SELECTED" then
                 if not (pet.inputState == "SELECTED") then
@@ -182,6 +183,12 @@ Pet = function(id)
         if pet.fainted then
             love.graphics.draw(bandage,xoff+20,yoff+20);
         end
+        if pet.frozen then
+            love.graphics.draw(ice,xoff+pet.x,yoff+pet.y);
+        end
+        if pet.fromShop then
+            love.graphics.draw(dice[pet.tier],xoff+pet.x,yoff+pet.y-5);
+        end
         popColor();
     end
     pet.onMouseDown = function()
@@ -226,6 +233,11 @@ Pet = function(id)
                 end
                 game.manager.cleanupDrag();
             end
+        end
+    end
+    pet.onRightMouseUp = function()
+        if game.manager.state == "SHOP" and pet.fromShop then
+            pet.frozen = not pet.frozen;
         end
     end
     pet.combineAction = function(otherPet)
@@ -332,6 +344,7 @@ PetMap["crapgorps"] = {
     hp = 3;
     img = "img/char/crapgorps.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["gansley"] = {
     name = "Dan Gansley";
@@ -339,6 +352,7 @@ PetMap["gansley"] = {
     hp = 1;
     img = "img/char/gansley.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["ben"] = {
     name = "Ben";
@@ -346,6 +360,7 @@ PetMap["ben"] = {
     hp = 2;
     img = "img/char/ben.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["flamethrower"] = {
     name = "Flamethrower";
@@ -353,6 +368,7 @@ PetMap["flamethrower"] = {
     hp = 2;
     img = "img/char/flamethrower.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["wellwatcher"] = {
     name = "Well Watcher";
@@ -360,6 +376,7 @@ PetMap["wellwatcher"] = {
     hp = 3;
     img = "img/char/wellwatcher.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["skywatcher"] = {
     name = "Sky Watcher";
@@ -368,6 +385,7 @@ PetMap["skywatcher"] = {
     img = "img/char/skywatcher.png";
     tier = 1;
     notBuyable = true;
+    gender = "m";
 }
 PetMap["martin"] = {
     name = "Martin";
@@ -375,6 +393,7 @@ PetMap["martin"] = {
     hp = 2;
     img = "img/char/martin.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["gorou"] = {
     name = "Gorou";
@@ -382,6 +401,7 @@ PetMap["gorou"] = {
     hp = 3;
     img = "img/char/gorou.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["giovanni"] = {
     name = "Giovanni";
@@ -389,6 +409,7 @@ PetMap["giovanni"] = {
     hp = 2;
     img = "img/char/giovanni.png";
     tier = 1;
+    gender = "m";
 }
 PetMap["molly"] = {
     name = "Molly";
@@ -396,6 +417,7 @@ PetMap["molly"] = {
     hp = 4;
     img = "img/char/molly.png";
     tier = 2;
+    gender = "f";
 }
 PetMap["simphony"] = {
     name = "Simphony";
@@ -403,6 +425,7 @@ PetMap["simphony"] = {
     hp = 1;
     img = "img/char/simphony.png";
     tier = 2;
+    gender = "f";
 }
 PetMap["bugsy"] = {
     name = "Bugsy";
@@ -410,6 +433,7 @@ PetMap["bugsy"] = {
     hp = 5;
     img = "img/char/bugsy.png";
     tier = 2;
+    gender = "m";
 }
 PetMap["mera"] = {
     name = "Mera";
@@ -417,6 +441,7 @@ PetMap["mera"] = {
     hp = 4;
     img = "img/char/mera.png";
     tier = 3;
+    gender = "f";
 }
 PetMap["howdy"] = {
     name = "Howdy";
@@ -424,6 +449,7 @@ PetMap["howdy"] = {
     hp = 3;
     img = "img/char/howdy.png";
     tier = 4;
+    gender = "m";
 }
 PetMap["indus"] = {
     name = "Indus";
@@ -431,6 +457,7 @@ PetMap["indus"] = {
     hp = 5;
     img = "img/char/indus.png";
     tier = 5;
+    gender = "m";
 }
 PetMap["jolteon"] = {
     name = "Jolteon";
@@ -438,6 +465,7 @@ PetMap["jolteon"] = {
     hp = 6;
     img = "img/char/jolteon.png";
     tier = 6;
+    gender = "m";
 }
 PetTiers = {Array(),Array(),Array(),Array(),Array(),Array()};
 for k,v in pairs(PetMap) do
