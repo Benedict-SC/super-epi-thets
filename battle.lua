@@ -24,7 +24,7 @@ Battle = function(friendly,enemy)
         end
         battle.friendly.lineUp(function() 
             battle.enemy.lineUp(function()
-                next();
+                asyn.wait(0.12,next);
             end);
         end);
     end

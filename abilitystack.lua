@@ -7,9 +7,20 @@ AbilityStack = function()
     aStack.allCompleteCallback = function() end
     aStack.callbackSet = false;
     aStack.startProcessing = function(allCompleteCallback)
-        if allCompleteCallback and (not aStack.callbackSet) and (not (allCompleteCallback == aStack.processNext)) then
-            aStack.allCompleteCallback = allCompleteCallback;
-            aStack.callbackSet = true;
+        if allCompleteCallback then
+            if not aStack.callbackSet then
+                if not (allCompleteCallback == aStack.processNext) then
+                    aStack.allCompleteCallback = allCompleteCallback;
+                    aStack.callbackSet = true;
+                end
+            else
+                local previousComplete = aStack.allCompleteCallback;
+                aStack.allCompleteCallback = function()
+                    aStack.allCompleteCallback = previousComplete;
+                    aStack.callbackSet = true;
+                    allCompleteCallback();
+                end
+            end
         end
         aStack.processNext();
     end

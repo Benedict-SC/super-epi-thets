@@ -36,6 +36,7 @@ Clickable = function()
                     clickable.mouseDown = true;
                     clickable.onMouseDown();
                 end
+            --don't put that extra clickable.mouseDown check back- I want mouseUp events to fire even if the click didn't originate there, for the purposes of drag interactions
             elseif mouseReleased then--and clickable.mouseDown then
                 clickable.mouseDown = false;
                 clickable.onMouseUp();

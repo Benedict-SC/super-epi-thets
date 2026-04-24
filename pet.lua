@@ -114,13 +114,15 @@ Pet = function(id)
     pet.allAbilities = function()
         return pet.abilities.concat(pet.perk.abilities);
     end
-    pet.triggerOne = function(triggerType,args,done)
+    pet.triggerOne = function(triggerType,args,done,defer)
         pet.allAbilities().forEach(function(el) 
             if el.id == triggerType then
                 game.abilityStack.registerAbilityTrigger(pet,triggerType,el.func,args);
             end
         end);
-        game.abilityStack.startProcessing(done);
+        if not defer then
+            game.abilityStack.startProcessing(done);
+        end
     end
 
     pet.draw = function(xoff,yoff,xscale)
@@ -432,6 +434,46 @@ PetMap["bugsy"] = {
     atk = 1;
     hp = 5;
     img = "img/char/bugsy.png";
+    tier = 2;
+    gender = "m";
+}
+PetMap["spike"] = {
+    name = "Spike";
+    atk = 4;
+    hp = 2;
+    img = "img/char/spike.png";
+    tier = 2;
+    gender = "f";
+}
+PetMap["feenie"] = {
+    name = "Phoenica";
+    atk = 1;
+    hp = 3;
+    img = "img/char/feenie.png";
+    tier = 2;
+    gender = "f";
+}
+PetMap["gacha"] = {
+    name = "Gacha";
+    atk = 3;
+    hp = 3;
+    img = "img/char/gacha.png";
+    tier = 2;
+    gender = "f";
+}
+PetMap["darkstar"] = {
+    name = "Darkstar";
+    atk = 4;
+    hp = 1;
+    img = "img/char/darkstar.png";
+    tier = 2;
+    gender = "m";
+}
+PetMap["crusher"] = {
+    name = "Crusher";
+    atk = 2;
+    hp = 2;
+    img = "img/char/crusher.png";
     tier = 2;
     gender = "m";
 }

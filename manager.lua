@@ -11,18 +11,18 @@ Manager = function()
             game.run.gold = game.run.gold + mng.selectedPet.getSellPrice();
             game.team.removePet(mng.selectedPet);
             mng.state = "ANIMATE";
-            mng.selectedPet.sell(function() 
+            game.abilityStack.registerAbilityTrigger(mng.selectedPet,"sell",mng.selectedPet.sell);
+            mng.triggerForTeam("friendSold",mng.selectedPet,function()
                 mng.state = "SHOP";
-                mng.cleanupDrag(); 
             end);
             mng.clearSelection();
         elseif mng.draggingPet then
             game.run.gold = game.run.gold + mng.draggingPet.getSellPrice();
             game.team.removePet(mng.draggingPet);
             mng.state = "ANIMATE";
-            mng.draggingPet.sell(function() 
+            game.abilityStack.registerAbilityTrigger(mng.draggingPet,"sell",mng.draggingPet.sell);
+            mng.triggerForTeam("friendSold",mng.draggingPet,function()
                 mng.state = "SHOP";
-                mng.cleanupDrag(); 
             end);
             mng.cleanupDrag();
         end
@@ -34,6 +34,7 @@ Manager = function()
     mng.rollButton.onMouseUp = function()
         if game.run.gold > 0 then
             game.run.gold = game.run.gold - 1;
+            mng.triggerGoldSpent(1);
             game.petShop.roll(game.run.tier);
             game.itemShop.roll(game.run.tier);
         end
@@ -46,25 +47,27 @@ Manager = function()
         if mng.state == "SHOP" then
             game.run.endTurn();
             mng.state = "BATTLE";
-            asyn.doOverTime(0.8,function(percent) 
-                game.fadeAlpha = percent;
-            end,function() 
-                --replace teams with instanced teams;
-                game.savedTeam = game.team;
-                game.savedEnemyTeam = game.enemyTeam;
-                game.team = game.team.getCopy();
-                game.enemyTeam = game.enemyTeam.getCopy();
-                --hide UI
-                mng.hideUI = true;
-                --fade back in
+            mng.triggerForTeam("endOfTurn",nil,function()
                 asyn.doOverTime(0.8,function(percent) 
-                    game.fadeAlpha = 1-percent;
+                    game.fadeAlpha = percent;
                 end,function() 
-                    game.fadeAlpha = 0;
-                    --start the battle
-                    mng.startBattle();
-                end);
-            end)
+                    --replace teams with instanced teams;
+                    game.savedTeam = game.team;
+                    game.savedEnemyTeam = game.enemyTeam;
+                    game.team = game.team.getCopy();
+                    game.enemyTeam = game.enemyTeam.getCopy();
+                    --hide UI
+                    mng.hideUI = true;
+                    --fade back in
+                    asyn.doOverTime(0.8,function(percent) 
+                        game.fadeAlpha = 1-percent;
+                    end,function() 
+                        game.fadeAlpha = 0;
+                        --start the battle
+                        mng.startBattle();
+                    end);
+                end)
+            end);
         end
     end
     
@@ -73,6 +76,7 @@ Manager = function()
         mng.battle.begin();
     end
     mng.startTurn = function()
+        game.run.goldSpentThisTurn = 0;
         --trigger start of turn abilities
         local all = game.team.getAllPets();
         local actions = Array();
@@ -90,6 +94,19 @@ Manager = function()
     end
     mng.triggerRandom = function()
         --interrupt/hijack current battle action to trigger random abilities
+    end
+    mng.triggerGoldSpent = function(amount)
+        game.run.goldSpentThisTurn = game.run.goldSpentThisTurn + amount;
+        if game.run.goldSpentThisTurn > 10 then
+            local diff = game.run.goldSpentThisTurn - amount;
+            if diff < 10 then
+                --correct amount
+                amount = amount - (10-diff);
+            end
+            mng.triggerForTeam("spentGoldPastTen",amount,function()
+                    mng.state = "SHOP";
+            end);
+        end
     end
     mng.flushStack = function()
         if (#game.abilityStack.stack > 0) and not game.abilityStack.callbackSet then
@@ -156,6 +173,7 @@ Manager = function()
         end
         game.run.gold = game.run.gold - price;
         pet.fromShop = false;
+        mng.triggerGoldSpent(price);
         return true;
     end
     mng.buyFood = function(food)
@@ -166,7 +184,24 @@ Manager = function()
         end
         game.run.gold = game.run.gold - price;
         game.itemShop.buy(food);
+        mng.triggerGoldSpent(price);
         return true;
+    end
+    mng.triggerForTeam = function(triggerType,args,done)
+        local allFriendlyPets = game.team.getAllPets();
+        local anyTriggered = false;
+        allFriendlyPets.forEach(function(pet) 
+            pet.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    anyTriggered = true;
+                    game.abilityStack.registerAbilityTrigger(pet,triggerType,el.func,args);
+                end
+            end);
+        end);
+        if anyTriggered then
+            mng.state = "ANIMATE";
+        end
+        game.abilityStack.startProcessing(done)
     end
     mng.clearSelection = function()
         if mng.selectedPet then

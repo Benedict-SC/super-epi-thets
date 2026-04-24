@@ -185,13 +185,14 @@ giveAbilitiesToPet = function(pet,copying)
                     game.manager.battle.dealDirectDamage(dmg,newWatcher,newWatcher,newdone);
                 end
                 newWatcher.hurt = function(newdone,sourceAndAmount)
-                    if source.source == newWatcher then
+                    if sourceAndAmount.source == newWatcher then
                         newWatcher.transform("skywatcher");
                         asyn.wait(0.4,newdone);
                     else
                         newdone();
                     end
                 end
+                newWatcher.abilities = ArrayFromRawArray({{id="summoned",func = newWatcher.summoned},{id="hurt",func = newWatcher.hurt}})
                 local spot = pet.getIndex();
                 local team = pet.getTeam();
                 team.replacePet(spot,newWatcher);
@@ -238,6 +239,115 @@ giveAbilitiesToPet = function(pet,copying)
             "Friend faints: Gain 5 HP."
         }
         pet.abilities = ArrayFromRawArray({{id="friendFaints",func = pet.friendFaints}})
+    elseif pet.id == "spike" then
+        pet.hurt = function(done,sourceAndAmount)
+            local amount = 1;
+            if pet.level > 1 then
+                amount = amount + 2;
+            end
+            if pet.level > 2 then
+                amount = amount + 3;
+            end
+            game.manager.battle.dealDirectDamage(amount,pet,sourceAndAmount.source,done);
+        end
+        pet.abilityText = {
+            "Hurt: Deal 1 damage to attacker.",
+            "Hurt: Deal 3 damage to attacker.",
+            "Hurt: Deal 6 damage to attacker."
+        }
+        pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
+    elseif pet.id == "feenie" then
+        pet.spentGoldPastTen = function(done,gold)
+            local teammates = pet.getTeam().getAllPets();
+            teammates.removeElement(pet);
+            local randomTeammate = teammates[math.random(#teammates)];
+            randomTeammate.hp = randomTeammate.hp + (gold*pet.level);
+            done();
+        end
+        pet.abilityText = {
+            "Spent gold past 10: Give that much health to a random teammate.",
+            "Spent gold past 10: Give twice that much health to a random teammate.",
+            "Spent gold past 10: Give three times that much health to a random teammate."
+        }
+        pet.abilities = ArrayFromRawArray({{id="spentGoldPastTen",func=pet.spentGoldPastTen}});
+    elseif pet.id == "bugsy" then
+        pet.ateFood = function(done,tier)
+            pet.tempAtk = pet.tempAtk + (pet.level * tier);
+            done();
+        end
+        pet.abilityText = {
+            "Ate food: Gain attack equal to its tier until next turn.",
+            "Ate food: Gain attack equal to twice its tier until next turn.",
+            "Ate food: Gain attack equal to three times its tier until next turn."
+        }
+        pet.abilities = ArrayFromRawArray({{id="ateFood",func=pet.ateFood}});
+    elseif pet.id == "gacha" then
+        pet.friendSold = function(done,friend) 
+            pet.atk = pet.atk + pet.level;
+            pet.hp = pet.hp + pet.level;
+            done();
+        end
+        pet.abilityText = {
+            "Friend sold: Gain 1 attack and 1 health.",
+            "Friend sold: Gain 2 attack and 2 health.",
+            "Friend sold: Gain 3 attack and 3 health."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendSold",func=pet.friendSold}});
+    elseif pet.id == "darkstar" then
+        pet.faint = function(done)
+            local rn = math.random(6);
+            if pet.level == 1 then
+                if rn == 6 then
+                    local newStar = Pet("darkstar");
+                    local spot = pet.getIndex();
+                    local team = pet.getTeam();
+                    team.replacePet(spot,newStar);
+                end
+            elseif pet.level == 2 then
+                if rn >= 5 then
+                    local newStar = Pet("darkstar");
+                    newStar.atk = 6;
+                    newStar.hp = 3;
+                    local spot = pet.getIndex();
+                    local team = pet.getTeam();
+                    team.replacePet(spot,newStar);
+                end
+            else --pet.level == 3
+                if rn >= 4 then
+                    local newStar = Pet("darkstar");
+                    newStar.atk = 9;
+                    newStar.hp = 6;
+                    newStar.xp = 2;
+                    newStar.level = 2;
+                    local spot = pet.getIndex();
+                    local team = pet.getTeam();
+                    team.replacePet(spot,newStar);
+                end
+            end
+            game.manager.triggerRandom();
+            done();
+        end
+        pet.abilityText = {
+            "Faint: Randomly (1/6 chance) summon an additional 4/1 Darkstar.",
+            "Faint: Randomly (1/3 chance) summon an additional 6/3 Darkstar at level 1.",
+            "Faint: Randomly (1/2 chance) summon an additional 9/6 Darkstar at level 2."
+        }
+        pet.abilities = ArrayFromRawArray({{id="faint",func=pet.faint}});
+    elseif pet.id == "crusher" then
+        pet.endOfTurn = function(done)
+            local slot = pet.getIndex();
+            local friendAhead = game.team.get(slot+1);
+            if friendAhead then
+                friendAhead.hp = friendAhead.hp + (2*pet.level);
+            end
+            done();
+        end
+        pet.abilityText = {
+            "End of turn: Give friend ahead 2 health.",
+            "End of turn: Give friend ahead 4 health.",
+            "End of turn: Give friend ahead 6 health."
+        }
+        pet.abilities = ArrayFromRawArray({{id="endOfTurn",func=pet.endOfTurn}});
     elseif pet.id == "mera" then
         pet.hurt = function(done,sourceAndAmount)
             local selfFragile = FragileAilment();

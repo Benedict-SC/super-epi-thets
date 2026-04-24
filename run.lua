@@ -6,6 +6,7 @@ Run = function()
     run.wins = 0;
     run.gold = 10;
     run.extraGoldNextTurn = 0;
+    run.goldSpentThisTurn = 0;
     run.shopSlots = 3;
     run.itemSlots = 1;
     run.tier = 1;
