@@ -8,15 +8,16 @@ Game = function()
     game.abilityStack = AbilityStack();
 
     game.team = Team();
-    game.team.addNewPet("mera");
-    game.team.addNewPet("crapgorps");
+    game.team.addNewPet("poochy");
+    game.team.addNewPet("molly");
+    game.team.get(1).hp = 17;
     game.team.addNewPet("gorou");
     --game.team.addNewPet("crapgorps");
     --game.team.addNewPet("giovanni");
 
     game.enemyTeam = Team();
-    game.enemyTeam.addNewPet("martin",1)
-    game.enemyTeam.get(1).addExp(2);
+    game.enemyTeam.addNewPet("stink",1)
+    game.enemyTeam.get(1).addExp(1);
     game.enemyTeam.addNewPet("gansley",4)
     game.enemyTeam.addNewPet("simphony",2)
     game.enemyTeam.addNewPet("crapgorps",5)

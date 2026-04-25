@@ -10,6 +10,7 @@ Pet = function(id)
     pet.hp = sourcePet.hp;
     pet.defense = function() return 0; end
     pet.tier = sourcePet.tier;
+    pet.gender = sourcePet.gender;
     pet.frozen = false;
     pet.perk = Perk();
 
@@ -220,7 +221,8 @@ Pet = function(id)
                 if not pet.fromShop then
                     local didBuy = game.manager.buyFood(game.manager.selectedFood);
                     if didBuy then
-                        game.manager.selectedFood.eat(pet);
+                        local foodAte = game.manager.selectedFood;
+                        foodAte.eat(pet,foodAte);
                         game.manager.flushStack();
                     end
                 end
@@ -229,7 +231,8 @@ Pet = function(id)
                 if not pet.fromShop then
                     local didBuy = game.manager.buyFood(game.manager.draggingFood);
                     if didBuy then
-                        game.manager.draggingFood.eat(pet);
+                        local foodAte = game.manager.draggingFood;
+                        foodAte.eat(pet,foodAte);
                         game.manager.flushStack();
                     end
                 end
@@ -319,6 +322,13 @@ Pet = function(id)
             end
         end
         return nil;
+    end
+    pet.getTeammates = function()
+        local team = pet.getTeam();
+        team = team.getAllPets();
+        return team.filter(function(el)
+            return el ~= pet;
+        end);
     end
     pet.screenCenter = function()
         local team = pet.enemy and game.enemyTeam or game.team;
@@ -484,6 +494,55 @@ PetMap["mera"] = {
     img = "img/char/mera.png";
     tier = 3;
     gender = "f";
+}
+PetMap["stink"] = {
+    name = "Stink";
+    atk = 2;
+    hp = 2;
+    img = "img/char/stink.png";
+    tier = 3;
+    gender = "m";
+}
+PetMap["poochy"] = {
+    name = "Poochy";
+    atk = 1;
+    hp = 5;
+    img = "img/char/poochy.png";
+    tier = 3;
+    gender = "f";
+}
+PetMap["craig"] = {
+    name = "CRAIG";
+    atk = 1;
+    hp = 1;
+    img = "img/char/craig.png";
+    tier = 3;
+    notBuyable = true;
+    gender = "m";
+}
+PetMap["naven"] = {
+    name = "Naven";
+    atk = 2;
+    hp = 2;
+    img = "img/char/naven.png";
+    tier = 3;
+    gender = "m";
+}
+PetMap["umby"] = {
+    name = "Umbreon";
+    atk = 4;
+    hp = 5;
+    img = "img/char/umby.png";
+    tier = 3;
+    gender = "m";
+}
+PetMap["espy"] = {
+    name = "Espeon";
+    atk = 3;
+    hp = 4;
+    img = "img/char/espy.png";
+    tier = 3;
+    gender = "m";
 }
 PetMap["howdy"] = {
     name = "Howdy";

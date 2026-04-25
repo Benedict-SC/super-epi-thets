@@ -22,6 +22,34 @@ Battle = function(friendly,enemy)
                 battle.removePet(all[i]);
             end
         end
+        local allFriendlies = battle.friendly.getAllPets();
+        if #allFriendlies == 1 and battle.friendly.oddTrumpets > 0 then
+            local survivorIndex = allFriendlies[1].getIndex();
+            local craigSlot = survivorIndex + 1;
+            if craigSlot <= 5 then  --guard against someone being in the front somehow
+                local craig = Pet("craig");
+                craig.atk = battle.friendly.oddTrumpets * 2;
+                craig.hp = math.ceil(battle.friendly.oddTrumpets / 2);
+                battle.friendly.addExistingPet(craig,craigSlot);
+                battle.friendly.oddTrumpets = 0;
+            end
+        end
+        local allEnemies = battle.enemy.getAllPets();
+        if #allEnemies == 1 and battle.enemy.oddTrumpets > 0 then
+            local survivorIndex2 = allEnemies[1].getIndex();
+            local craigSlot2 = survivorIndex2 + 1;
+            if craigSlot2 <= 5 then  --guard against someone being in the front somehow
+                local craig2 = Pet("craig");
+                craig2.enemy = true;
+                craig2.atk = battle.enemy.oddTrumpets * 2;
+                craig2.hp = math.ceil(battle.enemy.oddTrumpets / 2);
+                battle.enemy.addExistingPet(craig2,craigSlot2);
+                battle.enemy.oddTrumpets = 0;
+            end
+        end
+        battle.lineUp(next);
+    end
+    battle.lineUp = function(next)
         battle.friendly.lineUp(function() 
             battle.enemy.lineUp(function()
                 asyn.wait(0.12,next);
@@ -120,17 +148,33 @@ Battle = function(friendly,enemy)
             end,function() 
                 frontFriendly.x = 0;
                 frontEnemy.x = 0;
-                --activate hurt abilities if fdmg/edmg are positive
-                battle.triggerForAll("anyoneAttacked",nil,nil,true)
-                battle.triggerForCombatants({ff=frontFriendly,fe=frontEnemy},"afterAttack",nil,nil,true);
-                frontFriendly.triggerOne("hurt",{source=frontEnemy,dmg=edmg},nil,true)
-                frontEnemy.triggerOne("hurt",{source=frontFriendly,dmg=fdmg},function()
+                local proceed = function()
                     battle.processFainting(function() 
                         battle.resolveStep(function() 
                             battle.roundEnd() 
                         end); 
                     end);
-                end)
+                end
+                --trigger post-attack abilities
+                battle.triggerForAll("anyoneAttacked",nil,nil,true)
+                battle.triggerForTeammates(frontFriendly,"friendAttacks",frontFriendly,nil,true);
+                battle.triggerForTeammates(frontEnemy,"friendAttacks",frontEnemy,nil,true);
+                battle.triggerForCombatants({ff=frontFriendly,fe=frontEnemy},"afterAttack",nil,nil,true);
+                --trigger hurt abilities if relevant
+                if edmg == 0 and fdmg == 0 then
+                    game.abilityStack.startProcessing(proceed);
+                elseif edmg == 0 then
+                    frontEnemy.triggerOne("hurt",{source=frontFriendly,dmg=fdmg},nil,true)
+                    battle.triggerForTeammates(frontEnemy,"friendHurt",{friend=frontEnemy,source=frontFriendly},proceed);
+                elseif fdmg == 0 then
+                    frontFriendly.triggerOne("hurt",{source=frontEnemy,dmg=edmg},nil,true)
+                    battle.triggerForTeammates(frontFriendly,"friendHurt",{friend=frontFriendly,source=frontEnemy},proceed);
+                else
+                    frontEnemy.triggerOne("hurt",{source=frontFriendly,dmg=fdmg},nil,true)
+                    frontFriendly.triggerOne("hurt",{source=frontEnemy,dmg=edmg},nil,true)
+                    battle.triggerForTeammates(frontFriendly,"friendHurt",{friend=frontFriendly,source=frontEnemy},nil,true);
+                    battle.triggerForTeammates(frontEnemy,"friendHurt",{friend=frontEnemy,source=frontFriendly},proceed);
+                end
             end);
         end);
     end
@@ -156,7 +200,8 @@ Battle = function(friendly,enemy)
             if totalDamage == 0 then
                 done();
             else 
-                target.triggerOne("hurt",{source=source,dmg=totalDamage},done);
+                target.triggerOne("hurt",{source=source,dmg=totalDamage},nil,true);
+                battle.triggerForTeammates(target,"friendHurt",{friend=target,source=source},done)
             end
         end);
     end
@@ -171,10 +216,10 @@ Battle = function(friendly,enemy)
                         game.abilityStack.registerAbilityTrigger(fainter,"faint",el.func);
                     end
                 end);
-                local teammates = fainter.getTeam().getAllPets();
+                local teammates = fainter.getTeammates();
                 teammates.forEach(function(tm) 
                     tm.allAbilities().forEach(function(el) 
-                        if el.id == "friendFaints" and not (tm == fainter) then
+                        if el.id == "friendFaints" then
                             game.abilityStack.registerAbilityTrigger(tm,"friendFaints",el.func,fainter);
                         end
                     end);
@@ -250,6 +295,21 @@ Battle = function(friendly,enemy)
     end
     battle.triggerForAll = function(triggerType,args,done,defer)
         local all = battle.allPets();
+        local actions = Array();
+        for i=#all,1,-1 do
+            local pet = all[i];
+            pet.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    game.abilityStack.registerAbilityTrigger(pet,triggerType,el.func,args);
+                end
+            end);
+        end
+        if not defer then
+            game.abilityStack.startProcessing(done);
+        end
+    end
+    battle.triggerForTeammates = function(pet,triggerType,args,done,defer)
+        local all = pet.getTeammates();
         local actions = Array();
         for i=#all,1,-1 do
             local pet = all[i];

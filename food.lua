@@ -15,6 +15,14 @@ Food = function(id)
 
     food.priceModifier = 0;
 
+    food.eatTriggers = function(pet)
+        pet.ateFood(function() end,food.tier);
+        local mates = pet.getTeammates();
+        mates.forEach(function(el) 
+            el.friendAteFood(function() end,food);
+        end);
+    end
+
     food.draw = function(xoff,yoff,xscale)
         pushColor();
         if food.inputState == "DRAGGING" then
@@ -79,47 +87,48 @@ FoodMap["apple"] = {
     name = "Apple";
     img = "img/food/apple.png";
     tier = 1;
-    eat = function(pet)
+    eat = function(pet,food)
         pet.atk = pet.atk + 1;
         pet.hp = pet.hp + 1;
-        pet.ateFood(function() end,1);
+        food.eatTriggers(pet);
     end
 }
 FoodMap["honeyedsnack"] = {
     name = "Honeyed Snack";
     img = "img/food/honeyedsnack.png";
     tier = 1;
-    eat = function(pet)
+    eat = function(pet,food)
+        food.eatTriggers(pet);
     end
 }
 FoodMap["waterysoup"] = {
     name = "Watery Soup";
     img = "img/food/waterysoup.png";
     tier = 1;
-    eat = function(pet)
+    eat = function(pet,food)
         pet.tempAtk = pet.tempAtk + 2;
         pet.tempHp = pet.tempHp + 2;
-        pet.ateFood(function() end,1);
+        food.eatTriggers(pet);
     end
 }
 FoodMap["donutgun1"] = {
     name = "Donut Gun";
     img = "img/food/donutgun.png";
     tier = 2;
-    eat = function(pet)
+    eat = function(pet,food)
         local gunperk = DonutGunPerk(1);
         pet.gainPerk(gunperk);
-        pet.ateFood(function() end,2);
+        food.eatTriggers(pet);
     end;
 }
 FoodMap["donutgun2"] = {
     name = "Donut Gun";
     img = "img/food/donutgun.png";
     tier = 2;
-    eat = function(pet)
+    eat = function(pet,food)
         local gunperk = DonutGunPerk(2);
         pet.gainPerk(gunperk);
-        pet.ateFood(function() end,2);
+        food.eatTriggers(pet);
     end;
     notBuyable = true;
 }
@@ -127,10 +136,10 @@ FoodMap["donutgun3"] = {
     name = "Donut Gun";
     img = "img/food/donutgun.png";
     tier = 2;
-    eat = function(pet)
+    eat = function(pet,food)
         local gunperk = DonutGunPerk(3);
         pet.gainPerk(gunperk);
-        pet.ateFood(function() end,2);
+        food.eatTriggers(pet);
     end;
     notBuyable = true;
 }
@@ -138,55 +147,56 @@ FoodMap["toohot"] = {
     name = "Soup that is Too Hot";
     img = "img/food/toohot.png";
     tier = 2;
-    eat = function(pet)
+    eat = function(pet,food)
         pet.hp = pet.hp - 2;
         if pet.hp < 1 then pet.hp = 1; end
         local hotperk = HotHotHotPerk();
         pet.gainPerk(hotperk);
-        pet.ateFood(function() end,2);
+        food.eatTriggers(pet);
     end;
 }
 FoodMap["betterapple"] = {
     name = "Better Apple";
     img = "img/food/betterapple.png";
     tier = 3;
-    eat = function(pet)
+    eat = function(pet,food)
         pet.atk = pet.atk + 2;
         pet.hp = pet.hp + 2;
-        pet.ateFood(function() end,3);
+        food.eatTriggers(pet);
     end
 }
 FoodMap["grapes"] = {
     name = "Grapes";
     img = "img/food/grapes.png";
     tier = 4;
-    eat = function(pet)
+    eat = function(pet,food)
+        food.eatTriggers(pet);
     end
 }
 FoodMap["bestapple"] = {
     name = "Best Apple";
     img = "img/food/bestapple.png";
     tier = 5;
-    eat = function(pet)
+    eat = function(pet,food)
         pet.atk = pet.atk + 3;
         pet.hp = pet.hp + 3;
-        pet.ateFood(function() end,5);
+        food.eatTriggers(pet);
     end
 }
 FoodMap["chocolate"] = {
     name = "Chocolate";
     img = "img/food/chocolate.png";
     tier = 5;
-    eat = function(pet)
+    eat = function(pet,food)
         pet.addExp(1);
-        pet.ateFood(function() end,5);
+        food.eatTriggers(pet);
     end
 }
 FoodMap["hotdog"] = {
     name = "Hot Dog";
     img = "img/food/hotdog.png";
     tier = 6;
-    eat = function(pet)
+    eat = function(pet,food)
         local targets = game.team.getAllPets();
         if #targets == 0 then 
             return;
@@ -199,9 +209,9 @@ FoodMap["hotdog"] = {
             targets.removeElement(randomPet1);
             local randomPet2 = targets[math.random(#targets)];
             randomPet1.atk = randomPet1.atk + 4;
-            randomPet1.ateFood(function() end,6);
+            food.eatTriggers(randomPet1);
             randomPet2.atk = randomPet2.atk + 4;
-            randomPet2.ateFood(function() end,6);
+            food.eatTriggers(randomPet2);
         end
     end
 }

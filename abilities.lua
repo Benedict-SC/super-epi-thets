@@ -8,6 +8,7 @@ giveAbilitiesToPet = function(pet,copying)
     pet.beforeBattle = function(done) done(); end
     pet.beforeAttack = function(done,opponent) done(); end
     pet.hurt = function(done,sourceAndAmount) done(); end
+    pet.friendHurt = function(done,friendAndSource) done(); end
     pet.afterAttack = function(done,opponent) done(); end
     pet.faint = function(done) done(); end
     pet.friendFaints = function(done,friend) done(); end
@@ -16,13 +17,11 @@ giveAbilitiesToPet = function(pet,copying)
     pet.spentGoldPastTen = function(done,gold) done(); end
     pet.randomThingHappens = function(done) done(); end
     pet.emptyBackSpace = function(done) done(); end
-    pet.friendAteApple = function(done) done(); end
+    pet.friendAteFood = function(done,food) done(); end
     pet.ateFood = function(done,tier) done(); end
     pet.boughtFood = function(done) done(); end
     pet.fedToFriend = function(done,friend) done(); end
-    pet.friendBehindHurt = function(done,friend) done(); end
-    pet.friendAheadHurt = function(done,friend) done(); end
-    pet.twoFriendsAttack = function(done) done(); end
+    pet.friendAttacks = function(done,friend) done(); end
     pet.somethingFlewOverhead = function(done) done(); end
     pet.anyoneAttacked = function(done) done(); end
     pet.abilities = Array();
@@ -367,6 +366,111 @@ giveAbilitiesToPet = function(pet,copying)
             "Hurt: Apply Fragile to self and first three enemies ahead."
         }
         pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
+    elseif pet.id == "stink" then
+        pet.projectileUrl = "img/cursedsword.png";
+        pet.startOfBattle = function(done)
+            local dmg = 4*pet.level;
+            local oppTeam = pet.getEnemyTeam();
+            oppTeam = oppTeam.getAllPets();
+            oppTeam = oppTeam.filter(function(el)
+                return el.gender == "f";
+            end);
+            if #oppTeam <= 0 then
+                done();
+            else
+                local target = oppTeam[math.random(#oppTeam)];
+                if target.id == "trixie" then
+                    game.manager.battle.dealDirectDamage(0,pet,target,function()
+                        game.manager.battle.dealDirectDamage(dmg,target,pet,function()
+                            pet.gainPerk(CursedAilment());
+                            done();
+                        end)
+                    end)
+                else
+                    game.manager.battle.dealDirectDamage(dmg,pet,target,function()
+                        target.gainPerk(CursedAilment());
+                        done();
+                    end)
+                end
+            end
+        end
+        pet.abilityText = {
+            "Start of battle: Deal 4 damage to a Random enemy Girl and inflict Cursed.",
+            "Start of battle: Deal 8 damage to a Random enemy Girl and inflict Cursed.",
+            "Start of battle: Deal 12 damage to a Random enemy Girl and inflict Cursed."
+        }
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func=pet.startOfBattle}});
+    elseif pet.id == "poochy" then
+        pet.triggersCount = 0;
+        pet.twoCounter = 0;
+        pet.friendAttacks = function(done,friend)
+            if friend.id ~= "craig" then
+                pet.twoCounter = pet.twoCounter + 1;
+                if pet.twoCounter == 2 then
+                    pet.twoCounter = 0;
+                    pet.triggersCount = pet.triggersCount + 1;
+                    local team = pet.getTeam();
+                    team.oddTrumpets = team.oddTrumpets + pet.level;
+                    done();
+                else
+                    done();
+                end
+            else
+                done();
+            end
+        end
+        pet.abilityText = {
+            "Two friends attack: Gain 1 Odd Trumpet.",
+            "Two friends attack: Gain 2 Odd Trumpets.",
+            "Two friends attack: Gain 3 Odd Trumpets."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendAttacks",func=pet.friendAttacks}});
+    elseif pet.id == "naven" then
+        pet.friendAteFood = function(done,food)
+            if (food.id == "apple") or (food.id == "betterapple") or (food.id == "bestapple") then
+                pet.atk = pet.atk + pet.level;
+                pet.hp = pet.hp + pet.level;
+                game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
+            end
+        end
+        pet.abilityText = {
+            "Friend ate apple: Gain 1 attack and health, and gain 1 gold next turn.",
+            "Friend ate apple: Gain 2 attack and health, and gain 2 gold next turn.",
+            "Friend ate apple: Gain 3 attack and health, and gain 3 gold next turn."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendAteFood",func=pet.friendAteFood}});
+    elseif pet.id == "umby" then
+        pet.friendHurt = function(done,friendAndSource)
+            local friend = friendAndSource.friend;
+            local source = friendAndSource.source;
+            if source and (friend.getIndex() < pet.getIndex()) then
+                game.manager.battle.dealDirectDamage(3*pet.level,pet,source,done);
+            else
+                done();
+            end
+        end
+        pet.abilityText = {
+            "Any friend behind hurt: Deal 3 damage to the attacker.",
+            "Any friend behind hurt: Deal 6 damage to the attacker.",
+            "Any friend behind hurt: Deal 9 damage to the attacker."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendHurt",func=pet.friendHurt}});
+    elseif pet.id == "espy" then
+        pet.friendHurt = function(done,friendAndSource)
+            local friend = friendAndSource.friend;
+            local source = friendAndSource.source;
+            if source and (friend.getIndex() > pet.getIndex()) then
+                game.manager.battle.dealDirectDamage(pet.level,pet,source,done);
+            else
+                done();
+            end
+        end
+        pet.abilityText = {
+            "Any friend ahead hurt: Deal 1 damage to the attacker.",
+            "Any friend ahead hurt: Deal 2 damage to the attacker.",
+            "Any friend ahead hurt: Deal 3 damage to the attacker."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendHurt",func=pet.friendHurt}});
     elseif pet.id == "howdy" then
 
     end

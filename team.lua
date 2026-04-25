@@ -5,6 +5,7 @@ Team = function()
     team.listBackToFront = Array();
     team.faceRight = true;
     team.statsIndicator = love.graphics.newImage("img/stats.png");
+    team.oddTrumpets = 0;
     team.addNewPet = function(id,pos)
         local newPet = Pet(id);
         team.addExistingPet(newPet,pos);
@@ -111,11 +112,11 @@ Team = function()
         end
     end
     team.draw = function()
+        local spacing = team.faceRight and 100 or -100
+        local scale = team.faceRight and 1 or -1
         for i=1,5,1 do
             local pet = team.listBackToFront[i];
             if pet then
-                local spacing = team.faceRight and 100 or -100
-                local scale = team.faceRight and 1 or -1
                 local xoff = team.x + ((i-1)*spacing);
                 pet.draw(xoff,team.y,scale);
                 --love.graphics.draw(pet.img,xoff + ((scale == -1) and 100 or 0),team.y,0,scale,1);
@@ -128,6 +129,11 @@ Team = function()
                 love.graphics.print("" .. pet.atk,xoff + 22, team.y + 89);
                 love.graphics.print("" .. pet.hp,xoff + 70, team.y + 87);]]--
             end
+        end
+        if team.oddTrumpets > 0 then
+            local x = team.x + (spacing*2.5) - 101 + (team.faceRight and 0 or 101)
+            love.graphics.draw(tumpet,x,team.y - 140);
+            love.graphics.print(team.oddTrumpets,x+95,team.y - 114);
         end
     end
     team.get = function(slot)

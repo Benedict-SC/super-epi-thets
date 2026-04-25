@@ -57,3 +57,22 @@ FragileAilment = function()
     fragile.copy = function() return FragileAilment(); end
     return fragile;
 end
+CursedAilment = function()
+    local cursed = Perk("cursed");
+    cursed.isAilment = true;
+    cursed.faint = function(done)
+        local team = cursed.owner.getTeam();
+        team = team.getAllPets();
+        team.removeElement(cursed.owner);
+        if #team > 0 then
+            local randomTeammate = team[math.random(#team)];
+            randomTeammate.gainPerk(CursedAilment());
+            done();
+        else
+            done();
+        end
+    end
+    cursed.abilities.push({id="faint",func=cursed.faint});
+    cursed.copy = function() return CursedAilment(); end
+    return cursed;
+end

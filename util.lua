@@ -183,6 +183,15 @@ Array = function(...)
 			func(arr[i]);
 		end
 	end
+	arr.filter = function(func)
+		local nArr = Array();
+		arr.forEach(function(el) 
+			if func(el) then
+				nArr.push(el);
+			end
+		end);
+		return nArr;
+	end
     arr.concat = function(arr2)
         local nArr = Array();
         for i=1,#arr,1 do
