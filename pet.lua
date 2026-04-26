@@ -96,7 +96,7 @@ Pet = function(id)
             --here's where we'd trigger gained-perk effects... TIMMY TURNER'S DAD MEME!!!
         end
     end
-    pet.fling = function(pos)
+    pet.fling = function(pos,failedFilename)
 
     end
     pet.getCopy = function()
@@ -128,6 +128,10 @@ Pet = function(id)
 
     pet.draw = function(xoff,yoff,xscale)
         pushColor();
+        if pet.discount and pet.discount > 0 then
+            love.graphics.draw(discount,xoff+pet.x+22,yoff+pet.y-15);
+            love.graphics.print(3-pet.discount,xoff+pet.x+52,yoff+pet.y-21)
+        end
         if pet.inputState == "DRAGGING" then
             love.graphics.setColor(0,0,0);
         end
@@ -565,6 +569,31 @@ PetMap["espy"] = {
     atk = 3;
     hp = 4;
     img = "img/char/espy.png";
+    tier = 3;
+    gender = "m";
+}
+PetMap["sylvie"] = {
+    name = "Sylvie";
+    atk = 3;
+    hp = 1;
+    img = "img/char/sylvie.png";
+    tier = 3;
+    gender = "m";
+}
+PetMap["beefton"] = {
+    name = "DR. BEEFTON";
+    atk = 1;
+    hp = 1;
+    img = "img/char/beefton.png";
+    tier = 3;
+    notBuyable = true;
+    gender = "m";
+}
+PetMap["scaregrow"] = {
+    name = "Scaregrow";
+    atk = 1;
+    hp = 7;
+    img = "img/char/scaregrow.png";
     tier = 3;
     gender = "m";
 }

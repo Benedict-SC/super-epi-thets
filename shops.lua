@@ -105,6 +105,7 @@ ItemShop = function()
         local idsAvailable = FoodTiers[pickedTier];
         local foodId = idsAvailable[math.random(#idsAvailable)];
         local food = Food(foodId);
+        food.discount = discount;
         shop.contents.push(food);
     end
     return shop;

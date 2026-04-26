@@ -6,6 +6,7 @@ Food = function(id)
     food.tier = sourceFood.tier;
     food.eat = sourceFood.eat;
     food.frozen = false;
+    food.discount = 0;
 
     food.imgUrl = sourceFood.img;
     food.img = love.graphics.newImage(food.imgUrl);
@@ -25,6 +26,10 @@ Food = function(id)
 
     food.draw = function(xoff,yoff,xscale)
         pushColor();
+        if food.discount > 0 then
+            love.graphics.draw(discount,xoff+food.x+22,yoff+food.y-15);
+            love.graphics.print(3-food.discount,xoff+food.x+52,yoff+food.y-21)
+        end
         if food.inputState == "DRAGGING" then
             love.graphics.setColor(0,0,0);
         end
@@ -92,6 +97,24 @@ FoodMap["apple"] = {
         pet.hp = pet.hp + 1;
         food.eatTriggers(pet);
     end
+}
+FoodMap["corn"] = {
+    name = "Corn";
+    img = "img/food/corn.png";
+    tier = 1;
+    eat = function(pet,food)
+        local amount = 1;
+        if food.multiplier and (food.enemy == pet.enemy) then
+            amount = amount * food.multiplier;
+        end
+        if pet.atk < pet.hp then
+            pet.atk = pet.atk + amount;
+        else
+            pet.hp = pet.hp + amount;
+        end
+        food.eatTriggers(pet);
+    end;
+    notBuyable = true;
 }
 FoodMap["honeyedsnack"] = {
     name = "Honeyed Snack";

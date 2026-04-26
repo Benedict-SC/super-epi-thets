@@ -75,6 +75,79 @@ Team = function()
             done();   
         end)
     end
+    team.summonPetAheadOf = function(rootPet,newPet,done)
+        newPet.enemy = rootPet.enemy;
+        local pos = rootPet.getIndex();
+        if (pos+1 <= 5) and not team.get(pos+1) then
+            team.addExistingPet(pet,pos+1);
+            done();
+        elseif team.isFull() then
+            rootPet.fling(pos,pet.id);
+            done();
+        else
+            local nearestSpaceBehind = pos - 1;
+            while (nearestSpaceBehind > 0) do
+                local someoneHere = team.get(nearestSpaceBehind);
+                if someoneHere then
+                    nearestSpaceBehind = nearestSpaceBehind - 1;
+                else
+                    break;
+                end
+            end
+            if nearestSpaceBehind > 0 then
+                --do all the shifting
+                local petsToShift = Array();
+                for i=nearestSpaceBehind+1,pos,1 do
+                    petsToShift.push(team.get(i));
+                end
+                asyn.doOverTime(0.15,function(percent) 
+                    petsToShift.forEach(function(el) 
+                        el.x = team.faceRight and (-100*percent) or (100*percent);
+                    end);
+                end,function() 
+                    for i=nearestSpaceBehind,pos-1,1 do
+                        local petToMoveBack = team.get(i+1);
+                        team.listBackToFront[i] = petToMoveBack;
+                        petToMoveBack.x = 0;
+                    end
+                    team.listBackToFront[pos] = newPet;
+                    done();
+                end);
+            else
+                local nearestSpaceAhead = pos + 1;
+                while (nearestSpaceAhead <= 5) do
+                    local someoneHere = team.get(nearestSpaceAhead);
+                    if someoneHere then
+                        nearestSpaceAhead = nearestSpaceAhead + 1;
+                    else
+                        break;
+                    end
+                end
+                if nearestSpaceAhead <= 5 then 
+                    local petsToShift = Array();
+                    for i=nearestSpaceAhead,pos+1,-1 do
+                        petsToShift.push(team.get(i));
+                    end
+                    asyn.doOverTime(0.15,function(percent) 
+                        petsToShift.forEach(function(el) 
+                            el.x = team.faceRight and (100*percent) or (-100*percent);
+                        end);
+                    end,function() 
+                        for i=nearestSpaceAhead,pos+1,-1 do
+                            local petToMoveForward = team.get(i-1);
+                            team.listBackToFront[i] = petToMoveForward;
+                            petToMoveForward.x = 0;
+                        end
+                        team.listBackToFront[pos+1] = newPet;
+                        done();
+                    end);
+                else
+                    rootPet.fling(pos,pet.id);
+                    done();
+                end
+            end
+        end
+    end
     team.isFull = function()
         for i=1,5,1 do
             if not team.listBackToFront[i] then
@@ -114,6 +187,11 @@ Team = function()
     team.draw = function()
         local spacing = team.faceRight and 100 or -100
         local scale = team.faceRight and 1 or -1
+        if team.oddTrumpets > 0 then
+            local x = team.x + (spacing*2.5) - 101 + (team.faceRight and 0 or 101)
+            love.graphics.draw(tumpet,x,team.y - 140);
+            love.graphics.print(team.oddTrumpets,x+95,team.y - 114);
+        end
         for i=1,5,1 do
             local pet = team.listBackToFront[i];
             if pet then
@@ -129,11 +207,6 @@ Team = function()
                 love.graphics.print("" .. pet.atk,xoff + 22, team.y + 89);
                 love.graphics.print("" .. pet.hp,xoff + 70, team.y + 87);]]--
             end
-        end
-        if team.oddTrumpets > 0 then
-            local x = team.x + (spacing*2.5) - 101 + (team.faceRight and 0 or 101)
-            love.graphics.draw(tumpet,x,team.y - 140);
-            love.graphics.print(team.oddTrumpets,x+95,team.y - 114);
         end
     end
     team.get = function(slot)

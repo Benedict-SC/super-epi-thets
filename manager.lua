@@ -168,18 +168,20 @@ Manager = function()
     end
     mng.buyPet = function(pet)
         local price = 3;
-        --if it's like, graham cost-reduced by arnold or something, reduce it
+        if pet.discount then
+            price = 3 - pet.discount;
+        end
         if game.run.gold < price then
             return false;
         end
         game.run.gold = game.run.gold - price;
         pet.fromShop = false;
+        pet.discount = 0;
         mng.triggerGoldSpent(price);
         return true;
     end
     mng.buyFood = function(food)
-        local price = 3;
-        --todo: handle cost reduction
+        local price = 3 - food.discount;
         if game.run.gold < price then
             return false;
         end

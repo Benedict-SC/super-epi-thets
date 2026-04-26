@@ -25,6 +25,11 @@ giveAbilitiesToPet = function(pet,copying)
     pet.somethingFlewOverhead = function(done) done(); end
     pet.anyoneAttacked = function(done) done(); end
     pet.abilities = Array();
+    pet.abilityText = {
+        pet.name .. " isn't implemented yet.",
+        pet.name .. " isn't implemented yet.",
+        pet.name .. " isn't implemented yet."
+    }
 
     if pet.id == "ben" then
         pet.startOfBattle = function(done)
@@ -471,7 +476,70 @@ giveAbilitiesToPet = function(pet,copying)
             "Any friend ahead hurt: Deal 3 damage to the attacker."
         }
         pet.abilities = ArrayFromRawArray({{id="friendHurt",func=pet.friendHurt}});
+    elseif pet.id == "sylvie" then
+        pet.beeftonSummoned = false;
+        pet.hurt = function(done,sourceAndAmount)
+            if pet.beeftonSummoned then
+                done();
+            elseif pet.getTeam().isFull() then
+                pet.fling(pet.getIndex(),"beefton");
+                done();
+            else
+                pet.beeftonSummoned = true;
+                local beefton = Pet("beefton");
+                beefton.atk = 5*pet.level;
+                beefton.hp = 5*pet.level;
+                pet.getTeam().summonPetAheadOf(pet,beefton,done);
+            end
+        end
+        pet.abilityText = {
+            "First time hurt: Summon a 5/5 Dr. Beefton ahead.",
+            "First time hurt: Summon a 10/10 Dr. Beefton ahead.",
+            "First time hurt: Summon a 15/15 Dr. Beefton ahead."
+        }
+        pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
+    elseif pet.id == "beefton" then
+        pet.abilityText = {
+            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics.",
+            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics.",
+            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics."
+        }
+    elseif pet.id == "scaregrow" then
+        pet.startOfBattle = function(done)
+            local targets = game.manager.battle.allPets();
+            local times = 2 + (pet.level*2)
+            for i=1,times,1 do
+                local cob = Food("corn");
+                cob.enemy = pet.enemy;
+                cob.multiplier = 1 + pet.level;
+                local target = targets[math.random(#targets)];
+                cob.eat(target,cob);
+                done();
+            end
+        end
+        pet.abilityText = {
+            "Start of battle: Feed 4 corncobs to Random pets. Double effect on allies.",
+            "Start of battle: Feed 6 corncobs to Random pets. Triple effect on allies.",
+            "Start of battle: Feed 8 corncobs to Random pets. Quadruple effect on allies."
+        }
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func=pet.startOfBattle}});
     elseif pet.id == "howdy" then
-
+        pet.startOfTurn = function(done)
+            game.itemShop.stockAdditionalRandomFood(pet.level);
+            game.manager.triggerRandom();
+            done();
+        end
+        pet.abilityText = {
+            "Start of turn: Stock an additional Random food and apply a 1-gold senior discount.",
+            "Start of turn: Stock an additional Random food and apply a 2-gold senior discount.",
+            "Start of turn: Stock an additional Random food and apply a 3-gold senior discount."
+        }
+        pet.abilities = ArrayFromRawArray({{id="startOfTurn",func = pet.startOfTurn}})
+    elseif pet.id == "craig" then
+        pet.abilityText = {
+            "Please: KILL ME!!!",
+            "WHY AM I NOT DEAD!!!",
+            "I YEARN FOR THE SWEET EMBRACE OF OBLIVION!!!"
+        }
     end
 end
