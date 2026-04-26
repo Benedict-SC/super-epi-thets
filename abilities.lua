@@ -40,9 +40,9 @@ giveAbilitiesToPet = function(pet,copying)
             done();
         end
         pet.abilityText = {
-            "Start of battle: Randomly leaves (1/2 chance)",
-            "Start of battle: Randomly leaves (1/3 chance)",
-            "Start of battle: Randomly leaves (1/6 chance)"
+            "Start of battle: Randomly leaves (1/2 chance).",
+            "Start of battle: Randomly leaves (1/3 chance).",
+            "Start of battle: Randomly leaves (1/6 chance)."
         }
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}});
     elseif pet.id == "crapgorps" then
@@ -57,9 +57,9 @@ giveAbilitiesToPet = function(pet,copying)
             done();
         end
         pet.abilityText = {
-            "Start of battle: Gain 1 health for each 2 battles fought",
-            "Start of battle: Gain 1 health for each battle fought",
-            "Start of battle: Gain 2 health for each battle fought"
+            "Start of battle: Gain 1 health for each 2 battles fought.",
+            "Start of battle: Gain 1 health for each battle fought.",
+            "Start of battle: Gain 2 health for each battle fought."
         }
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}});
     elseif pet.id == "giovanni" then
@@ -199,9 +199,9 @@ giveAbilitiesToPet = function(pet,copying)
             end
         end
         pet.abilityText = {
-            "Start of battle: Gain 1 gold next turn, faint, and summon a Well Watcher with current perk and stats who immediately takes 3 damage and transforms into Sky Watcher.",
-            "Start of battle: Gain 2 gold next turn, faint, and summon a Well Watcher with current perk and stats who immediately takes 6 damage and transforms into Sky Watcher.",
-            "Start of battle: Gain 3 gold next turn, faint, and summon a Well Watcher with current perk and stats who immediately takes 10 damage and transforms into Sky Watcher."
+            "Start of battle: Gain 1 gold, faint, and summon a copy which takes 3 damage and turns into Sky Watcher.",
+            "Start of battle: Gain 2 gold, faint, and summon a copy which takes 6 damage and turns into Sky Watcher.",
+            "Start of battle: Gain 3 gold, faint, and summon a copy which takes 10 damage and turns into Sky Watcher."
         };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "skywatcher" then

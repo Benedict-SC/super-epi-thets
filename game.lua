@@ -44,7 +44,9 @@ Game = function()
         game.field.draw();
         game.run.draw();
         game.team.draw();
-        game.enemyTeam.draw();
+        if game.manager.state == "BATTLE" then
+            game.enemyTeam.draw();
+        end
         if not game.manager.hideUI then
             game.petShop.draw();
             game.itemShop.draw();

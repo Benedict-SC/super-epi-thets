@@ -13,6 +13,10 @@ love.window.setMode(gamewidth,gameheight,{
 });
 mainfont = love.graphics.newFont("fonts/OpenDyslexic3-Bold.ttf",20);
 love.graphics.setFont(mainfont);
+smallfont = love.graphics.newFont("fonts/OpenDyslexic3-Regular.ttf",12);
+smallfont:setLineHeight(0.8);
+smallfont_bold = love.graphics.newFont("fonts/OpenDyslexic3-Bold.ttf",12);
+smallfont_bold:setLineHeight(0.8);
 
 require("util");
 require("canvas-stack");

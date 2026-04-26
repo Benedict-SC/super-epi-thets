@@ -259,6 +259,7 @@ Battle = function(friendly,enemy)
             game.itemShop.roll(game.run.tier);
             --hide UI
             game.manager.hideUI = false;
+            game.manager.state = "ANIMATE";
             --fade back in
             asyn.doOverTime(0.8,function(percent) 
                 game.fadeAlpha = 1-percent;

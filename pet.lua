@@ -192,6 +192,30 @@ Pet = function(id)
         if pet.fromShop then
             love.graphics.draw(dice[pet.tier],xoff+pet.x,yoff+pet.y-5);
         end
+        --info box
+        if pet.hovered then
+            local nudge = 0;
+            if xoff - 100 < 5 then
+                nudge = 5 - (xoff-100);
+            end
+            love.graphics.setColor(0,0,0);
+            love.graphics.rectangle("fill",xoff+nudge - 100,yoff-130,300,110);
+            love.graphics.setColor(1,1,1);
+            love.graphics.rectangle("fill",xoff+nudge - 95,yoff-125,290,100);
+            love.graphics.draw(dice[pet.tier],xoff+nudge-96,yoff-126);
+            love.graphics.setColor(1,0.29,0);
+            love.graphics.print(pet.name,xoff+nudge - 52,yoff-129);
+            love.graphics.setColor(0.96,0.71,0.08);
+            love.graphics.print(pet.getSellPrice(),xoff+nudge+170,yoff-129);
+            love.graphics.setColor(0,0,0);
+            if pet.abilityText then
+                love.graphics.setFont(smallfont_bold);
+                local abText = pet.abilityText[pet.level];
+                love.graphics.printf(abText,xoff+nudge-90,yoff-90,280);
+                love.graphics.setFont(mainfont);
+            end
+        end
+
         popColor();
     end
     pet.onMouseDown = function()

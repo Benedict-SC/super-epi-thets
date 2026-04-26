@@ -46,7 +46,7 @@ Manager = function()
     mng.endButton.onMouseUp = function()
         if mng.state == "SHOP" then
             game.run.endTurn();
-            mng.state = "BATTLE";
+            mng.state = "ANIMATE";
             mng.triggerForTeam("endOfTurn",nil,function()
                 asyn.doOverTime(0.8,function(percent) 
                     game.fadeAlpha = percent;
@@ -58,6 +58,7 @@ Manager = function()
                     game.enemyTeam = game.enemyTeam.getCopy();
                     --hide UI
                     mng.hideUI = true;
+                    mng.state = "BATTLE";
                     --fade back in
                     asyn.doOverTime(0.8,function(percent) 
                         game.fadeAlpha = 1-percent;
