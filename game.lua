@@ -10,7 +10,7 @@ Game = function()
     game.team = Team();
     game.team.addNewPet("howdy");
     game.team.addNewPet("molly");
-    game.team.addNewPet("poochy");
+    game.team.addNewPet("spellingbee");
     --game.team.get(1).hp = 17;
     game.team.addNewPet("gorou");
     --game.team.addNewPet("crapgorps");
@@ -19,8 +19,8 @@ Game = function()
     game.enemyTeam = Team();
     game.enemyTeam.addNewPet("stink",1)
     game.enemyTeam.get(1).addExp(1);
-    game.enemyTeam.addNewPet("gansley",4)
     game.enemyTeam.addNewPet("simphony",2)
+    game.enemyTeam.addNewPet("carcrash",4)
     game.enemyTeam.addNewPet("crapgorps",5)
     game.enemyTeam.get(5).addExp(1);
     --game.enemyTeam.get(5).hp = 13;

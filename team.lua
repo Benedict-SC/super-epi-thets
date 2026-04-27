@@ -174,6 +174,39 @@ Team = function()
         end
         return all;
     end
+    team.isInAlphabeticalOrder = function()
+        local namestring = "";
+        for i=1,5,1 do
+            if team.get(i) then
+                local lowername = team.get(i).name:lower();
+                namestring = namestring .. lowername:sub(1,1);
+            end
+        end
+        local len = #namestring;
+        if len < 2 then
+            return true;
+        end
+
+        local ascending = true;
+        local descending = true;
+        local prev = namestring:byte(1);
+
+        for i=2,len,1 do
+            local curr = namestring:byte(i);
+            if curr < prev then
+                ascending = false;
+            end
+            if curr > prev then
+                descending = false;
+            end
+            if not ascending and not descending then
+                return false;
+            end
+            prev = curr;
+        end
+
+        return true;
+    end
     team.update = function()
         local spacing = team.faceRight and 100 or -100
         for i=1,5,1 do

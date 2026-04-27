@@ -17,6 +17,7 @@ Run = function()
     run.newTurn = function()
         run.turn = run.turn + 1;
         run.gold = 10 + run.extraGoldNextTurn;
+        if run.gold < 0 then run.gold = 0; end
         run.extraGoldNextTurn = 0;
         if run.turn == 5 then 
             run.shopSlots = 4;
@@ -27,6 +28,13 @@ Run = function()
         end
         run.tier = 1 + math.floor((run.turn - 1)/2);
         if run.tier > 6 then run.tier = 6; end
+        --reset once-per-turn abilities
+        local allPets = game.team.getAllPets();
+        allPets.forEach(function(el)
+            if el.goldbrickeredYet then
+                el.goldbrickeredYet = false;
+            end
+        end);
     end
     run.draw = function()
         love.graphics.draw(run.bg,10,10);

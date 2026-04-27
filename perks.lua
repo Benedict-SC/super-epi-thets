@@ -76,3 +76,10 @@ CursedAilment = function()
     cursed.copy = function() return CursedAilment(); end
     return cursed;
 end
+Quag = function()
+    local quag = Perk("quag");
+    quag.isAilment = true;
+    quag.isAlsoPerk = true; --whoops this is true for ailments by default until we get a thing that cares
+    quag.copy = function() return Quag(); end
+    return quag; --it doesn't do anything! yaaaaay!
+end

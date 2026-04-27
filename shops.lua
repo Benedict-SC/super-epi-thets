@@ -48,6 +48,18 @@ PetShop = function()
         end
         return frozen;
     end
+    shop.applyGrahamDiscount = function(discount)
+        for i=1,#shop.contents,1 do
+            local pet = shop.contents[i];
+            if pet.id == "graham" then
+                if not pet.discount then
+                    pet.discount = 0;
+                end
+                pet.discount = pet.discount + discount;
+                if pet.discount > 3 then pet.discount = 3; end
+            end
+        end
+    end
 
     return shop;
 end
@@ -86,6 +98,14 @@ ItemShop = function()
     end
     shop.buy = function(food)
         shop.contents.removeElement(food);
+        local triggers = game.team.getAllPets();
+        triggers.forEach(function(pet) 
+            pet.allAbilities().forEach(function(el) 
+                if el.id == "boughtFood" then
+                    game.abilityStack.registerAbilityTrigger(pet,"boughtFood",el.func,food);
+                end
+            end);
+        end);
     end
     shop.stock = function(id)
         shop.contents.push(Food(id));
@@ -107,6 +127,13 @@ ItemShop = function()
         local food = Food(foodId);
         food.discount = discount;
         shop.contents.push(food);
+    end
+    shop.applyGlobalDiscount = function(discount)
+        for i=1,#shop.contents,1 do
+            local food = shop.contents[i];
+            food.discount = food.discount + discount;
+            if food.discount > 3 then food.discount = 3; end
+        end
     end
     return shop;
 end

@@ -19,7 +19,7 @@ giveAbilitiesToPet = function(pet,copying)
     pet.emptyBackSpace = function(done) done(); end
     pet.friendAteFood = function(done,food) done(); end
     pet.ateFood = function(done,tier) done(); end
-    pet.boughtFood = function(done) done(); end
+    pet.boughtFood = function(done,food) done(); end
     pet.fedToFriend = function(done,friend) done(); end
     pet.friendAttacks = function(done,friend) done(); end
     pet.somethingFlewOverhead = function(done) done(); end
@@ -535,6 +535,140 @@ giveAbilitiesToPet = function(pet,copying)
             "Start of turn: Stock an additional Random food and apply a 3-gold senior discount."
         }
         pet.abilities = ArrayFromRawArray({{id="startOfTurn",func = pet.startOfTurn}})
+    elseif pet.id == "arnold" then
+        pet.boughtFood = function(done,food)
+            game.itemShop.applyGlobalDiscount(pet.level);
+            game.petShop.applyGrahamDiscount(pet.level);
+            done();
+        end
+        pet.abilityText = {
+            "Bought food: Discount shop food by 1.",
+            "Bought food: Discount shop food by 2.",
+            "Bought food: Discount shop food by 3.",
+        }
+        pet.abilities = ArrayFromRawArray({{id="boughtFood",func = pet.boughtFood}})
+    elseif pet.id == "trefor" then
+        pet.startOfBattle = function(done)
+            local quag = Quag();
+            pet.gainPerk(quag);
+            if pet.level == 2 then
+                local pos = pet.getIndex();
+                local behind = pet.getTeam().get(pos-1);
+                local ahead = pet.getTeam().get(pos+1);
+                if behind and (behind.perk.id == "default" or behind.perk.isAilment) then
+                    local q2 = Quag();
+                    behind.gainPerk(q2);
+                end
+                if ahead and (ahead.perk.id == "default" or ahead.perk.isAilment) then
+                    local q2 = Quag();
+                    ahead.gainPerk(q2);
+                end
+                done();
+            elseif pet.level == 3 then
+                local all = pet.getTeam().getAllPets();
+                all.forEach(function(el)
+                    if el.perk.id == "default" or el.perk.isAilment then
+                        local q2 = Quag();
+                        el.gainPerk(q2);
+                    end
+                end)
+                done();
+            else
+                done();
+            end
+        end
+        pet.abilityText = {
+            "Start of battle: Gain Quag. (Quag is both a perk and an ailment.)",
+            "Start of battle: Self and adjacent perkless friends gain Quag. (Quag is both a perk and an ailment.)",
+            "Start of battle: Self and all perkless friends gain Quag. (Quag is both a perk and an ailment.)"
+        }
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "ramsey" then
+        pet.goldbrickeredYet = false;
+        pet.friendSold = function(done,friend) 
+            if not pet.goldbrickeredYet then
+                game.run.gold = game.run.gold + (5*pet.level);
+                game.run.extraGoldNextTurn = game.run.extraGoldNextTurn - (5*pet.level);
+                pet.goldbrickeredYet = true;
+            end
+            done();
+        end
+        pet.sell = function(done)
+            if not pet.goldbrickeredYet then
+                game.run.gold = game.run.gold + (5*pet.level);
+                game.run.extraGoldNextTurn = game.run.extraGoldNextTurn - (5*pet.level);
+                pet.goldbrickeredYet = true;
+            end
+            done();
+        end
+        pet.abilityText = {
+            "Sell or friend sold: Gain 5 gold. Lose that much next turn. Triggers once per turn.",
+            "Sell or friend sold: Gain 10 gold. Lose that much next turn. Triggers once per turn.",
+            "Sell or friend sold: Gain 15 gold. Lose that much next turn. Triggers once per turn."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendSold",func=pet.friendSold}});
+    elseif pet.id == "carcrash" then
+        pet.startOfBattle = function(done)
+            pet.fainted = true;
+            asyn.wait(0.6,function() pet.faint(done) end);
+        end
+        pet.faint = function(done)
+            local bus = Pet("bus");
+            bus.atk = 6*pet.level;
+            bus.hp = 4*pet.level;
+            bus.enemy = pet.enemy;
+            local busperk = HotHotHotPerk();
+            bus.perk = busperk; --skip gaining- it comes in with it
+            busperk.owner = bus;
+            local spot = pet.getIndex();
+            local team = pet.getTeam();
+            team.replacePet(spot,bus);
+            done();
+        end
+        pet.abilityText = {
+            "Start of battle: Faint and summon a 6/4 Beat-up Bus with Too Hot.",
+            "Start of battle: Faint and summon a 12/8 Beat-up Bus with Too Hot.",
+            "Start of battle: Faint and summon a 18/12 Beat-up Bus with Too Hot."
+        };
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "spellingbee" then
+        pet.beforeAttack = function(done,opponent)
+            local enemyIsAlphabetical = game.enemyTeam.isInAlphabeticalOrder();
+            local playerIsAlphabetical = game.team.isInAlphabeticalOrder();
+            local dmg = pet.level;
+            local damageActions = Array();
+            if not enemyIsAlphabetical then
+                local allEnemy = game.enemyTeam.getAllPets();
+                allEnemy.forEach(function(el) 
+                    local action = function(next) 
+                        game.manager.battle.dealDirectDamage(dmg,pet,el,next,true);
+                    end;
+                    damageActions.push(action);
+                end);
+            end
+            if not playerIsAlphabetical then
+                local allFriend = game.team.getAllPets();
+                allFriend.forEach(function(el) 
+                    local action = function(next) 
+                        game.manager.battle.dealDirectDamage(dmg,pet,el,next,true);
+                    end;
+                    damageActions.push(action);
+                end);
+            end
+            asyn.runSerial(damageActions,done);
+        end
+        pet.abilityText = {
+            "Before attack: If either team is out of alphabetical order, deal 1 damage to that team.",
+            "Before attack: If either team is out of alphabetical order, deal 2 damage to that team.",
+            "Before attack: If either team is out of alphabetical order, deal 3 damage to that team.",
+        };
+        pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
+    elseif pet.id == "bus" then
+        pet.abilityText = {
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights."
+        }
     elseif pet.id == "craig" then
         pet.abilityText = {
             "Please: KILL ME!!!",

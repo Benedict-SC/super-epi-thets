@@ -605,6 +605,55 @@ PetMap["howdy"] = {
     tier = 4;
     gender = "m";
 }
+PetMap["arnold"] = {
+    name = "Arnold";
+    atk = 2;
+    hp = 5;
+    img = "img/char/arnold.png";
+    tier = 4;
+    gender = "m";
+}
+PetMap["ramsey"] = {
+    name = "Ramsey";
+    atk = 4;
+    hp = 6;
+    img = "img/char/ramsey.png";
+    tier = 4;
+    gender = "m";
+}
+PetMap["trefor"] = {
+    name = "Trefor";
+    atk = 3;
+    hp = 4;
+    img = "img/char/trefor.png";
+    tier = 4;
+    gender = "f";
+}
+PetMap["carcrash"] = {
+    name = "Car Crash";
+    atk = 1;
+    hp = 1;
+    img = "img/char/carcrash.png";
+    tier = 4;
+    gender = "m";
+}
+PetMap["bus"] = {
+    name = "Beat-up Bus";
+    atk = 1;
+    hp = 1;
+    img = "img/char/bus.png";
+    tier = 1;
+    notBuyable = true;
+    gender = "nb";
+}
+PetMap["spellingbee"] = {
+    name = "Spelling Bee";
+    atk = 3;
+    hp = 5;
+    img = "img/char/spellingbee.png";
+    tier = 4;
+    gender = "m";
+}
 PetMap["indus"] = {
     name = "Indus";
     atk = 8;

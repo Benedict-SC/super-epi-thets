@@ -178,7 +178,7 @@ Battle = function(friendly,enemy)
             end);
         end);
     end
-    battle.dealDirectDamage = function(amount,source,target,done) 
+    battle.dealDirectDamage = function(amount,source,target,done,defer) 
         local totalDamage = amount - target.defense();
         if totalDamage < 0 then totalDamage = 0; end
         local projectileImage = love.graphics.newImage(source.projectileUrl);
@@ -201,7 +201,12 @@ Battle = function(friendly,enemy)
                 done();
             else 
                 target.triggerOne("hurt",{source=source,dmg=totalDamage},nil,true);
-                battle.triggerForTeammates(target,"friendHurt",{friend=target,source=source},done)
+                if not defer then
+                    battle.triggerForTeammates(target,"friendHurt",{friend=target,source=source},done)
+                else
+                    battle.triggerForTeammates(target,"friendHurt",{friend=target,source=source},nil,true)
+                    done();
+                end
             end
         end);
     end
