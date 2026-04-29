@@ -121,6 +121,8 @@ FoodMap["honeyedsnack"] = {
     img = "img/food/honeyedsnack.png";
     tier = 1;
     eat = function(pet,food)
+        local honey = HoneyedSnackPerk(1);
+        pet.gainPerk(honey);
         food.eatTriggers(pet);
     end
 }

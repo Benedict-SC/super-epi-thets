@@ -14,6 +14,7 @@ giveAbilitiesToPet = function(pet,copying)
     pet.friendFaints = function(done,friend) done(); end
     pet.gainedAilment = function(done,ailment) done(); end
     pet.friendGainedAilment = function(done,friend) done(); end
+    pet.opponentGainedAilment = function(done,opponent) done(); end
     pet.spentGoldPastTen = function(done,gold) done(); end
     pet.randomThingHappens = function(done) done(); end
     pet.emptyBackSpace = function(done) done(); end
@@ -32,7 +33,7 @@ giveAbilitiesToPet = function(pet,copying)
     }
 
     if pet.id == "ben" then
-        pet.startOfBattle = function(done)
+        pet.beforeBattle = function(done)
             local leavesAtOrBelow = 4-pet.level;
             if math.random(6) <= leavesAtOrBelow then
                 if pet.enemy then
@@ -45,11 +46,11 @@ giveAbilitiesToPet = function(pet,copying)
             done();
         end
         pet.abilityText = {
-            "Start of battle: Randomly leaves (1/2 chance).",
-            "Start of battle: Randomly leaves (1/3 chance).",
-            "Start of battle: Randomly leaves (1/6 chance)."
+            "Before battle: Randomly leaves (1/2 chance).",
+            "Before battle: Randomly leaves (1/3 chance).",
+            "Before battle: Randomly leaves (1/6 chance)."
         }
-        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}});
+        pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}});
     elseif pet.id == "crapgorps" then
         pet.startOfBattle = function(done)
             local extraHealth = pet.battlesFought;
@@ -174,12 +175,26 @@ giveAbilitiesToPet = function(pet,copying)
             if not pet.enemy then
                 game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
             end
-            asyn.wait(0.6,function() pet.faint(done) end);
+            asyn.wait(0.6,function() 
+                if pet.perk.faint then
+                    pet.perk.faint(function()
+                        pet.faint(done);
+                    end)
+                else
+                    pet.faint(done)
+                end
+            end);
         end
         pet.faint = function(done)
             if not pet.alreadyDied then
                 newWatcher = pet.getCopy();
                 newWatcher.projectileUrl = "img/lightning.png";
+                newWatcher.img = love.graphics.newImage("img/char/wellwatcher2.png");
+                newWatcher.abilityText = {
+                    "Looks like there's an open spot for Well Watcher...",
+                    "Looks like there's an open spot for Well Watcher...",
+                    "Looks like there's an open spot for Well Watcher..."
+                }
                 asyn.wait(0.5,function() 
                     sound.play("thunder");
                 end);
@@ -610,7 +625,15 @@ giveAbilitiesToPet = function(pet,copying)
     elseif pet.id == "carcrash" then
         pet.startOfBattle = function(done)
             pet.fainted = true;
-            asyn.wait(0.6,function() pet.faint(done) end);
+            asyn.wait(0.6,function() 
+                if pet.perk.faint then
+                    pet.perk.faint(function()
+                        pet.faint(done);
+                    end)
+                else
+                    pet.faint(done)
+                end
+            end);
         end
         pet.faint = function(done)
             local bus = Pet("bus");
@@ -631,6 +654,12 @@ giveAbilitiesToPet = function(pet,copying)
             "Start of battle: Faint and summon a 18/12 Beat-up Bus with Too Hot."
         };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "bus" then
+        pet.abilityText = {
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights."
+        }
     elseif pet.id == "spellingbee" then
         pet.beforeAttack = function(done,opponent)
             local enemyIsAlphabetical = game.enemyTeam.isInAlphabeticalOrder();
@@ -663,12 +692,195 @@ giveAbilitiesToPet = function(pet,copying)
             "Before attack: If either team is out of alphabetical order, deal 3 damage to that team.",
         };
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
-    elseif pet.id == "bus" then
+    elseif pet.id == "indus" then
+        pet.startOfBattle = function(done)
+            local perk = Perk();
+            if pet.level == 1 then
+                perk = PepperPerk();
+            elseif pet.level == 2 then
+                perk = MelonPerk();
+            else --pet.level == 3
+                perk = CoconutPerk();
+            end
+            local ownCopy = perk.copy();
+            local teammateInFront = pet.getTeam().get(pet.getIndex() + 1);
+            if teammateInFront then
+                teammateInFront.gainPerk(perk);
+            end
+            pet.gainPerk(ownCopy);
+            done();
+        end
         pet.abilityText = {
-            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
-            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
-            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights."
-        }
+            "Start of battle: Give Pepper to self and friend ahead.",
+            "Start of battle: Give Melon to self and friend ahead.",
+            "Start of battle: Give Coconut to self and friend ahead."
+        };
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "weh" then
+        pet.beforeBattle = function(done)
+            local pos = pet.getIndex();
+            local neighborBehind = pet.getTeam().get(pos-1);
+            local neighborAhead = pet.getTeam().get(pos+1);
+            if (not neighborAhead) and (not neighborBehind) then
+                pet.atk = pet.atk + (6*pet.level);
+                pet.hp = pet.hp + (6*pet.level);
+            end
+            done();
+        end
+        pet.abilityText = {
+            "Before battle: If no adjacent friends, gain 6 attack and HP.",
+            "Before battle: If no adjacent friends, gain 12 attack and HP.",
+            "Before battle: If no adjacent friends, gain 18 attack and HP."
+        };
+        pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
+    elseif pet.id == "howie" then
+        pet.friendGainedAilment = function(done,friend)
+            friend.atk = friend.atk + pet.level;
+            local honey = HoneyedSnackPerk();
+            friend.gainPerk(honey);
+            done();
+        end
+        pet.abilityText = {
+            "Friend gained ailment: Replace it with Honeyed Snack and give +1 attack.",
+            "Friend gained ailment: Replace it with Honeyed Snack and give +2 attack.",
+            "Friend gained ailment: Replace it with Honeyed Snack and give +3 attack."
+        };
+        pet.abilities = ArrayFromRawArray({{id="friendGainedAilment",func = pet.friendGainedAilment}})
+    elseif pet.id == "tannenbaum" then
+        pet.falseSwipesUsed = 0;
+        pet.beforeAttack = function(done,opponent)
+            if pet.falseSwipesUsed <= (2*pet.level) then
+                pet.falseSwipesUsed = pet.falseSwipesUsed + 1;
+                pet.hp = pet.hp + (2*pet.level);
+                opponent.gainPerk(PepperPerk());
+            end
+            done();
+        end
+        pet.abilityText = {
+            "Before attack: Gain 2 HP and give the opponent Pepper. Triggers 2 times per battle.",
+            "Before attack: Gain 4 HP and give the opponent Pepper. Triggers 4 times per battle.",
+            "Before attack: Gain 6 HP and give the opponent Pepper. Triggers 6 times per battle."
+        };
+        pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
+    elseif pet.id == "exit" then
+        pet.beforeBattle = function(done)
+            local enemies = pet.getEnemyTeam().getAllPets();
+            local lowEnough = enemies.filter(function(el) 
+                return el.tier <= (pet.level*2)
+            end);
+            if #lowEnough > 0 then
+                local picked = lowEnough[math.random(#lowEnough)];
+                picked.getTeam().removePet(picked);
+                pet.getTeam().removePet(pet);
+                if #lowEnough > 1 then
+                    game.manager.triggerRandom();
+                end
+                done();
+            else
+                pet.getTeam().removePet(pet);
+                done();
+            end
+            game.manager.triggerRandom();
+        end
+        pet.abilityText = {
+            "Before battle: If no adjacent friends, gain 6 attack and HP.",
+            "Before battle: If no adjacent friends, gain 12 attack and HP.",
+            "Before battle: If no adjacent friends, gain 18 attack and HP."
+        };
+        pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
+    elseif pet.id == "justy" then
+        pet.defaultDefense = pet.defense;
+        pet.beforeAttack = function(done,opponent)
+            if math.random(6) <= pet.level then
+                pet.defense = function() 
+                    return 999;
+                end
+            end
+            done();
+        end
+        pet.afterAttack = function(done,opponent)
+            pet.defense = pet.defaultDefense;
+            done();
+        end
+        pet.abilityText = {
+            "1/6 chance to evade an enemy attack.",
+            "1/3 chance to evade an enemy attack.",
+            "1/2 chance to evade an enemy attack. He's perfected the Double Team technique...!"
+        };
+        pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack},{id="afterAttack",func = pet.afterAttack}})
+    elseif pet.id == "jorge" then
+        pet.beforeBattle = function(done)
+            local possibilities = {"vampirebat","vampiresquid","vampireparrot"};
+            local picked = possibilities[math.random(#possibilities)];
+            pet.transform(picked);
+            game.manager.triggerRandom();
+            done();
+        end
+        pet.abilityText = {
+            "Before battle: Randomly transform into a level 1 Vampire Bat, Parrot, or Squid.",
+            "Before battle: Randomly transform into a level 2 Vampire Bat, Parrot, or Squid.",
+            "Before battle: Randomly transform into a level 3 Vampire Bat, Parrot, or Squid."
+        };
+        pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
+    elseif pet.id == "vampireparrot" then
+        pet.startOfBattle = function(done)
+            local teammates = pet.getTeam().getAllPets();
+            local ailmentTypes = Array();
+            teammates.forEach(function(tm) 
+                if tm.perk.isAilment and (not ailmentTypes.contains(tm.perk.id)) then
+                    ailmentTypes.push(tm.perk.id);
+                end
+            end);
+            pet.atk = pet.atk + (#ailmentTypes * pet.level);
+            pet.hp = pet.hp + (#ailmentTypes * 2 * pet.level);
+            done();
+        end
+        pet.abilityText = {
+            "Start of battle: Gain 1 HP and 2 attack for each unique friendly ailment.",
+            "Start of battle: Gain 2 HP and 4 attack for each unique friendly ailment.",
+            "Start of battle: Gain 3 HP and 6 attack for each unique friendly ailment."
+        };
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "vampirebat" then
+        pet.opponentGainedAilment = function(done,opponent)
+            game.manager.battle.dealDirectDamage(4*pet.level,pet,opponent,function()
+                local ddealt = (4*pet.level)-opponent.defense();
+                if ddealt < 0 then ddealt = 0; end
+                pet.hp = pet.hp + ddealt;
+                done();
+            end)
+        end
+        pet.abilityText = {
+            "Enemy gained ailment: Deal 4 damage to it and gain damage as HP. Works 2 times per battle.",
+            "Enemy gained ailment: Deal 8 damage to it and gain damage as HP. Works 2 times per battle.",
+            "Enemy gained ailment: Deal 12 damage to it and gain damage as HP. Works 2 times per battle."
+        };
+        pet.abilities = ArrayFromRawArray({{id="opponentGainedAilment",func = pet.opponentGainedAilment}})
+    elseif pet.id == "vampiresquid" then
+        pet.startOfBattle = function(done)
+            local teammates = pet.getTeam().getAllPets();
+            local ailmentTypes = Array();
+            local afflictedPets = Array();
+            teammates.forEach(function(tm) 
+                if tm.perk.isAilment and (not ailmentTypes.contains(tm.perk.id)) then
+                    ailmentTypes.push(tm.perk.id);
+                    afflictedPets.push(tm);
+                end
+            end);
+            afflictedPets.forEach(function(ap) 
+                ap.atk = ap.atk + pet.level;
+                ap.hp = ap.hp + (2*pet.level);
+                ap.original.atk = ap.original.atk + pet.level;
+                ap.original.hp = ap.original.hp + (2*pet.level);
+            end);
+            done();
+        end
+        pet.abilityText = {
+            "Start of battle: Permanently give 1 attack and 2 HP to each friend with a different ailment.",
+            "Start of battle: Permanently give 2 attack and 4 HP to each friend with a different ailment.",
+            "Start of battle: Permanently give 3 attack and 6 HP to each friend with a different ailment."
+        };
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "craig" then
         pet.abilityText = {
             "Please: KILL ME!!!",

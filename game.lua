@@ -9,10 +9,20 @@ Game = function()
 
     game.team = Team();
     game.team.addNewPet("howdy");
+    local mem1 = game.team.get(1);
+    mem1.perk = Quag();
+    mem1.perk.owner = mem1;
     game.team.addNewPet("molly");
-    game.team.addNewPet("spellingbee");
-    --game.team.get(1).hp = 17;
+    local mem2 = game.team.get(1);
+    mem2.perk = CursedAilment();
+    mem2.perk.owner = mem2;
+    game.team.addNewPet("jorge");
+    --game.team.get(1).addExp(2);
+    --game.team.get(1).addExp(3);
     game.team.addNewPet("gorou");
+    local mem4 = game.team.get(1);
+    mem4.perk = ToastyAilment();
+    mem4.perk.owner = mem4;
     --game.team.addNewPet("crapgorps");
     --game.team.addNewPet("giovanni");
 

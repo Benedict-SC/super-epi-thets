@@ -83,3 +83,53 @@ Quag = function()
     quag.copy = function() return Quag(); end
     return quag; --it doesn't do anything! yaaaaay!
 end
+PepperPerk = function()
+    local pepper = Perk("pepper");
+    --damage reduction isn't an ability- handle in attack logic directly
+    pepper.afterAttack = function(done,opponent)
+        pepper.owner.losePerk();
+        done();
+    end
+    pepper.abilities.push({id="afterAttack",func=pepper.afterAttack});
+    pepper.copy = function() return PepperPerk(); end
+    return pepper;
+end
+MelonPerk = function()
+    local melon = Perk("melon");
+    --damage reduction isn't an ability- handle in defense function directly
+    melon.afterAttack = function(done,opponent)
+        melon.owner.losePerk();
+        done();
+    end
+    melon.abilities.push({id="afterAttack",func=melon.afterAttack});
+    melon.copy = function() return MelonPerk(); end
+    return melon;
+end
+CoconutPerk = function()
+    local coconut = Perk("coconut");
+    --damage reduction isn't an ability- handle in defense function directly
+    coconut.afterAttack = function(done,opponent)
+        coconut.owner.losePerk();
+        done();
+    end
+    coconut.abilities.push({id="afterAttack",func=coconut.afterAttack});
+    coconut.copy = function() return CoconutPerk(); end
+    return coconut;
+end
+HoneyedSnackPerk = function()
+    local honey = Perk("honeyedsnack");
+    honey.faint = function(done)
+        local pet = honey.owner;
+        local workerbee = Pet("workerbee");
+        workerbee.enemy = pet.enemy;
+        if pet.id == "wellwatcher" or pet.id == "sylvie" or pet.id == "darkstar" or pet.id == "carcrash" then
+            pet.getTeam().summonPetAheadOf(pet,workerbee,done);
+        else
+            pet.getTeam().replacePet(pet.getIndex(),workerbee);
+            done();
+        end
+    end
+    honey.abilities.push({id="faint",func=honey.faint});
+    honey.copy = function() return HoneyedSnackPerk(); end
+    return honey;
+end

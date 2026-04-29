@@ -139,8 +139,16 @@ Battle = function(friendly,enemy)
         end,function() 
             local fdmg = frontFriendly.atk + frontFriendly.perk.damageMod - frontEnemy.defense(); --modify this by defense-related perks
             local edmg = frontEnemy.atk + frontEnemy.perk.damageMod - frontFriendly.defense(); --ditto
+            if fdmg < 0 then fdmg = 0; end
+            if edmg < 0 then edmg = 0; end
             frontFriendly.hp = frontFriendly.hp - edmg;
             frontEnemy.hp = frontEnemy.hp - fdmg;
+            if frontFriendly.perk.id == "pepper" and frontFriendly.hp < 1 then
+                frontFriendly.hp = 1;
+            end
+            if frontEnemy.perk.id == "pepper" and frontEnemy.hp < 1 then
+                frontEnemy.hp = 1;
+            end
             sound.randomSmack();
             asyn.doOverTime(0.3,function(percent)
                 frontFriendly.x = dist - (dist*percent);
@@ -197,6 +205,14 @@ Battle = function(friendly,enemy)
         end,function() 
             battle.extras.removeElement(projectile);
             target.hp = target.hp - totalDamage;
+            if target.perk.id == "pepper" then
+                if target.hp <= 0 then
+                    target.hp = 1;
+                end
+                target.losePerk();
+            elseif target.perk.id == "melon" or target.perk.id == "coconut" then
+                target.losePerk();
+            end
             if totalDamage == 0 then
                 done();
             else 

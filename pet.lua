@@ -8,7 +8,6 @@ Pet = function(id)
     pet.name = sourcePet.name;
     pet.atk = sourcePet.atk;
     pet.hp = sourcePet.hp;
-    pet.defense = function() return 0; end
     pet.tier = sourcePet.tier;
     pet.gender = sourcePet.gender;
     pet.frozen = false;
@@ -25,6 +24,15 @@ Pet = function(id)
     pet.inputState = "IDLE";
 
     pet.priceModifier = 0;
+    pet.defense = function() 
+        if pet.perk.id == "melon" then 
+            return 20;
+        elseif pet.perk.id == "coconut" then
+            return 999;
+        else
+            return 0;
+        end
+    end
 
     giveAbilitiesToPet(pet);
 
@@ -87,11 +95,21 @@ Pet = function(id)
             teammates.forEach(function(tm) 
                 tm.allAbilities().forEach(function(el) 
                     if el.id == "friendGainedAilment" and not (tm == pet) then
-                        game.abilityStack.registerAbilityTrigger(tm,"friendGainedAilment",el.func,perk);
+                        game.abilityStack.registerAbilityTrigger(tm,"friendGainedAilment",el.func,pet);
                     end
                 end);
             end);
             game.abilityStack.startProcessing();
+            local enemies = pet.getEnemyTeam().getAllPets();
+            if game.manager.state == "BATTLE" then
+                enemies.forEach(function(en) 
+                    en.allAbilities().forEach(function(el) 
+                        if el.id == "opponentGainedAilment" then
+                            game.abilityStack.registerAbilityTrigger(en,"opponentGainedAilment",el.func,pet);
+                        end
+                    end);
+                end);
+            end
         else
             --here's where we'd trigger gained-perk effects... TIMMY TURNER'S DAD MEME!!!
         end
@@ -110,6 +128,7 @@ Pet = function(id)
         newPet.priceModifier = pet.priceModifier;
         newPet.perk = pet.perk.copy();
         newPet.perk.owner = newPet;
+        newPet.original = pet;
         return newPet;
     end
     pet.allAbilities = function()
@@ -427,6 +446,15 @@ PetMap["skywatcher"] = {
     notBuyable = true;
     gender = "m";
 }
+PetMap["workerbee"] = {
+    name = "Worker Bee";
+    atk = 1;
+    hp = 1;
+    img = "img/char/workerbee.png";
+    tier = 1;
+    notBuyable = true;
+    gender = "m";
+}
 PetMap["martin"] = {
     name = "Martin";
     atk = 1;
@@ -660,6 +688,81 @@ PetMap["indus"] = {
     hp = 5;
     img = "img/char/indus.png";
     tier = 5;
+    gender = "m";
+}
+PetMap["weh"] = {
+    name = "Weh!";
+    atk = 5;
+    hp = 7;
+    img = "img/char/weh.png";
+    tier = 5;
+    gender = "f";
+}
+PetMap["howie"] = {
+    name = "Howie";
+    atk = 6;
+    hp = 7;
+    img = "img/char/howie.png";
+    tier = 5;
+    gender = "m";
+}
+PetMap["tannenbaum"] = {
+    name = "Tannenbaum";
+    atk = 10;
+    hp = 6;
+    img = "img/char/tannenbaum.png";
+    tier = 5;
+    gender = "m";
+}
+PetMap["exit"] = {
+    name = "Exit";
+    atk = 11;
+    hp = 1;
+    img = "img/char/exit.png";
+    tier = 5;
+    gender = "m";
+}
+PetMap["justy"] = {
+    name = "Justy";
+    atk = 5;
+    hp = 5;
+    img = "img/char/justy.png";
+    tier = 5;
+    gender = "m";
+}
+PetMap["jorge"] = {
+    name = "Jorge";
+    atk = 3;
+    hp = 3;
+    img = "img/char/jorge.png";
+    tier = 5;
+    gender = "m";
+}
+PetMap["vampirebat"] = {
+    name = "Jorge (Batty)";
+    atk = 3;
+    hp = 3;
+    img = "img/char/vampirebat.png";
+    tier = 5;
+    notBuyable = true;
+    gender = "m";
+}
+PetMap["vampireparrot"] = {
+    name = "Jorge (Squawking)";
+    atk = 3;
+    hp = 3;
+    img = "img/char/vampireparrot.png";
+    tier = 5;
+    notBuyable = true;
+    gender = "m";
+}
+PetMap["vampiresquid"] = {
+    name = "Jorge (Wiggly)";
+    atk = 3;
+    hp = 3;
+    img = "img/char/vampiresquid.png";
+    tier = 5;
+    notBuyable = true;
     gender = "m";
 }
 PetMap["jolteon"] = {
