@@ -25,13 +25,16 @@ Pet = function(id)
 
     pet.priceModifier = 0;
     pet.defense = function() 
+        local amt = 0;
         if pet.perk.id == "melon" then 
-            return 20;
+            amt = amt + 20
         elseif pet.perk.id == "coconut" then
-            return 999;
-        else
-            return 0;
+            amt = amt + 999;
         end
+        if pet.perk.defDown then
+            amt = amt - pet.perk.defDown;
+        end
+        return amt;
     end
 
     giveAbilitiesToPet(pet);
@@ -75,6 +78,18 @@ Pet = function(id)
             return;
         end
     end
+    pet.loseExp = function(amt)
+        if pet.xp == 0 then return; end
+        pet.xp = pet.xp - amt;
+        pet.atk = pet.atk - amt;
+        pet.initialhp = pet.hp;
+        pet.hp = pet.hp - amt;
+        if pet.atk < 1 then pet.atk = 1; end
+        if pet.hp < 1 and pet.initialhp > 0 then pet.hp = 1; end
+        if pet.xp < 0 then pet.xp = 0; end
+        if pet.xp < 5 then pet.level = 2; end
+        if pet.xp < 2 then pet.level = 1; end
+    end
     pet.losePerk = function()
         if pet.perk.lostPerk then
             game.abilityStack.registerAbilityTrigger(pet,"lostPerk",pet.perk.lostPerk)
@@ -82,6 +97,10 @@ Pet = function(id)
         pet.perk = Perk();
     end
     pet.gainPerk = function(perk)
+        if perk.isAilment and (pet.oldDefense) and (pet.getIndex() ~= 5) then
+            --this is for lorelai's ability- checks oldDefense instead of her ID in case rick copied it
+            return;
+        end
         pet.losePerk();
         pet.perk = perk;
         pet.perk.owner = pet;
@@ -250,9 +269,7 @@ Pet = function(id)
     end
     pet.onMouseUp = function()
         if game.manager.state == "SHOP" then
-            if pet.inputState == "HELD" then
-                game.manager.selectPet(pet);
-            elseif pet.inputState == "SELECTED" then
+            if pet.inputState == "SELECTED" then
                 game.manager.clearSelection();
             elseif game.manager.draggingPet and game.manager.draggingPet ~= pet then
                 local dragged = game.manager.draggingPet;
@@ -284,6 +301,8 @@ Pet = function(id)
                     end
                 end
                 game.manager.cleanupDrag();
+            elseif pet.inputState == "HELD" then
+                game.manager.selectPet(pet);
             end
         end
     end
@@ -304,24 +323,72 @@ Pet = function(id)
                     game.team.removePet(otherPet);
                 end
             else
-                --switch positions
-                game.team.swapPets(pet,otherPet)
-                pet.inputState = "IDLE";
+                if otherPet.id == "graham" then
+                    pet.eatGraham(otherPet);
+                else
+                    --switch positions
+                    game.team.swapPets(pet,otherPet)
+                    pet.inputState = "IDLE";
+                    otherPet.inputState = "IDLE";
+                end
             end
         else
             if (pet.name == otherPet.name) then
                 if pet.level < 3 then
                     --combine and level up
-                    local success = game.manager.buyPet(pet);
+                    local success = false;
+                    if otherPet.isFromFoodShop then
+                        success = game.manager.buyFood(otherPet);
+                    else
+                        success = game.manager.buyPet(otherPet);
+                    end
                     if success then
                         pet.combine(otherPet);
                         game.petShop.buy(otherPet);
                     end
                 end
             else
-                --do nothing- you can't buy onto a full slot
+                if otherPet.id == "graham" then
+                    if otherPet.isFromFoodShop then
+                        local success = game.manager.buyFood(otherPet);
+                        if success then
+                            pet.eatGraham(otherPet);
+                        end
+                    else
+                        local success = game.manager.buyPet(otherPet);
+                        if success then
+                            pet.eatGraham(otherPet);
+                            game.petShop.buy(otherPet);
+                        end
+                    end
+                else
+                    --do nothing if not graham- you can't buy onto a full slot
+                    pet.inputState = "IDLE";
+                    otherPet.inputState = "IDLE";
+                end
             end
         end
+    end
+    pet.eatGraham = function(graham)
+        if graham.level == 1 then
+            pet.atk = pet.atk + 3;
+            pet.hp = pet.hp + 3;
+        elseif graham.level == 2 then
+            pet.atk = pet.atk + 10;
+            pet.hp = pet.hp + 10;
+        else
+            pet.atk = pet.atk + graham.atk;
+            pet.hp = pet.atk + graham.hp;
+        end
+        pet.ateFood(function() end,6);
+        local mates = pet.getTeammates();
+        mates.forEach(function(el) 
+            el.friendAteFood(function() end,graham);
+        end);
+        game.team.removePet(graham);
+        if graham.isFromFoodShop then
+        end
+        game.abilityStack.startProcessing(function() end);
     end
     pet.onHoverExit = function()
         if game.manager.state == "SHOP" then
@@ -772,6 +839,54 @@ PetMap["jolteon"] = {
     img = "img/char/jolteon.png";
     tier = 6;
     gender = "m";
+}
+PetMap["zora"] = {
+    name = "Zora";
+    atk = 3;
+    hp = 13;
+    img = "img/char/zora.png";
+    tier = 6;
+    gender = "f";
+}
+PetMap["trixie"] = {
+    name = "Trixie";
+    atk = 8;
+    hp = 7;
+    img = "img/char/trixie.png";
+    tier = 6;
+    gender = "f"; --for Stink targeting purposes. they auto-parry the sword with nonbiney aegis.
+}
+PetMap["graham"] = {
+    name = "Graham";
+    atk = 12;
+    hp = 10;
+    img = "img/char/graham.png";
+    tier = 6;
+    gender = "m";
+}
+PetMap["greenpikachu"] = {
+    name = "Green Pikachu";
+    atk = 3;
+    hp = 11;
+    img = "img/char/greenpikachu.png";
+    tier = 6;
+    gender = "m";
+}
+PetMap["wound"] = {
+    name = "Wound";
+    atk = 4;
+    hp = 4;
+    img = "img/char/wound.png";
+    tier = 6;
+    gender = "f"; --for Stink targeting. hits wownd, technically, even though woond is m
+}
+PetMap["lorelai"] = {
+    name = "Lorelai";
+    atk = 9;
+    hp = 6;
+    img = "img/char/lorelai.png";
+    tier = 6;
+    gender = "f"; 
 }
 PetTiers = {Array(),Array(),Array(),Array(),Array(),Array()};
 for k,v in pairs(PetMap) do

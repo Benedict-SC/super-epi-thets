@@ -195,6 +195,8 @@ FoodMap["grapes"] = {
     img = "img/food/grapes.png";
     tier = 4;
     eat = function(pet,food)
+        local grap = GrapesPerk();
+        pet.gainPerk(grap);
         food.eatTriggers(pet);
     end
 }

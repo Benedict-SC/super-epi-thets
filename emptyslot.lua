@@ -12,12 +12,24 @@ EmptySlot = function(index)
                     game.team.movePet(pet,slot.pos)
                     pet.inputState = "IDLE";
                 else
-                    local success = game.manager.buyPet(pet);
-                    if (success) then
-                        pet.frozen = false;
-                        game.team.addExistingPet(pet,slot.pos);
-                        game.petShop.buy(pet)
-                        pet.inputState = "IDLE";
+                    if pet.isFromFoodShop then
+                        local success = game.manager.buyFood(pet);
+                        if (success) then
+                            pet.frozen = false;
+                            game.team.addExistingPet(pet,slot.pos);
+                            game.itemShop.buy(pet)
+                            pet.fromShop = false;
+                            pet.isFromFoodShop = false;
+                            pet.inputState = "IDLE";
+                        end
+                    else
+                        local success = game.manager.buyPet(pet);
+                        if (success) then
+                            pet.frozen = false;
+                            game.team.addExistingPet(pet,slot.pos);
+                            game.petShop.buy(pet)
+                            pet.inputState = "IDLE";
+                        end
                     end
                 end
                 game.manager.cleanupDrag();
@@ -27,12 +39,22 @@ EmptySlot = function(index)
                     game.team.addExistingPet(pet,slot.pos)
                     pet.inputState = "IDLE";
                 else
-                    local success = game.manager.buyPet(pet);
-                    if (success) then
-                        pet.frozen = false;
-                        game.team.addExistingPet(pet,slot.pos);
-                        game.petShop.buy(pet)
-                        pet.inputState = "IDLE";
+                    if pet.isFromFoodShop then
+                        local success = game.manager.buyFood(pet);
+                        if (success) then
+                            pet.frozen = false;
+                            game.team.addExistingPet(pet,slot.pos);
+                            game.itemShop.buy(pet)
+                            pet.inputState = "IDLE";
+                        end
+                    else
+                        local success = game.manager.buyPet(pet);
+                        if (success) then
+                            pet.frozen = false;
+                            game.team.addExistingPet(pet,slot.pos);
+                            game.petShop.buy(pet)
+                            pet.inputState = "IDLE";
+                        end
                     end
                 end
                 game.manager.clearSelection();

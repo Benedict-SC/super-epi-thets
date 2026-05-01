@@ -33,56 +33,6 @@ HotHotHotPerk = function()
     hot.copy = function() return HotHotHotPerk(); end
     return hot;
 end
-ToastyAilment = function()
-    local toast = Perk("toasty");
-    toast.isAilment = true;
-    toast.anyoneAttacked = function(done)
-        toast.owner.hp = toast.owner.hp - 1;
-        toast.owner.triggerOne("hurt",{source=nil,dmg=1});
-        toast.owner.losePerk();
-        done();
-    end
-    toast.abilities.push({id="anyoneAttacked",func=toast.anyoneAttacked})
-    toast.copy = function() return ToastyAilment(); end
-    return toast;
-end
-FragileAilment = function()
-    local fragile = Perk("fragile");
-    fragile.isAilment = true;
-    fragile.hurt = function(done,sourceAndAmount)
-        fragile.owner.hp = fragile.owner.hp - sourceAndAmount.dmg; --double damage done
-        done();
-    end
-    fragile.abilities.push({id="hurt",func=fragile.hurt});
-    fragile.copy = function() return FragileAilment(); end
-    return fragile;
-end
-CursedAilment = function()
-    local cursed = Perk("cursed");
-    cursed.isAilment = true;
-    cursed.faint = function(done)
-        local team = cursed.owner.getTeam();
-        team = team.getAllPets();
-        team.removeElement(cursed.owner);
-        if #team > 0 then
-            local randomTeammate = team[math.random(#team)];
-            randomTeammate.gainPerk(CursedAilment());
-            done();
-        else
-            done();
-        end
-    end
-    cursed.abilities.push({id="faint",func=cursed.faint});
-    cursed.copy = function() return CursedAilment(); end
-    return cursed;
-end
-Quag = function()
-    local quag = Perk("quag");
-    quag.isAilment = true;
-    quag.isAlsoPerk = true; --whoops this is true for ailments by default until we get a thing that cares
-    quag.copy = function() return Quag(); end
-    return quag; --it doesn't do anything! yaaaaay!
-end
 PepperPerk = function()
     local pepper = Perk("pepper");
     --damage reduction isn't an ability- handle in attack logic directly
@@ -133,3 +83,117 @@ HoneyedSnackPerk = function()
     honey.copy = function() return HoneyedSnackPerk(); end
     return honey;
 end
+PeanutButterPerk = function()
+    local pb = Perk("peanutbutter");
+    --damage is handled separately in the attack logic
+    pb.afterAttack = function(done)
+        pb.owner.losePerk();
+        done();
+    end
+    pb.abilities.push({id="afterAttack",func=pb.afterAttack});
+    pb.copy = function() return PeanutButterPerk(); end
+    return pb;
+end
+GrapesPerk = function()
+    local grapes = Perk("grapes");
+    grapes.startOfTurn = function(done)
+        game.run.gold = game.run.gold + 1;
+        done();
+    end
+    grapes.abilities.push({id="startOfTurn",func=grapes.startOfTurn});
+    grapes.copy = function() return GrapesPerk(); end
+    return grapes;
+end
+--------ailments
+ToastyAilment = function()
+    local toast = Perk("toasty");
+    toast.isAilment = true;
+    toast.anyoneAttacked = function(done)
+        toast.owner.hp = toast.owner.hp - 1;
+        toast.owner.triggerOne("hurt",{source=nil,dmg=1});
+        toast.owner.losePerk();
+        done();
+    end
+    toast.abilities.push({id="anyoneAttacked",func=toast.anyoneAttacked})
+    toast.copy = function() return ToastyAilment(); end
+    return toast;
+end
+FragileAilment = function()
+    local fragile = Perk("fragile");
+    fragile.isAilment = true;
+    fragile.hurt = function(done,sourceAndAmount)
+        fragile.owner.hp = fragile.owner.hp - sourceAndAmount.dmg; --double damage done
+        done();
+    end
+    fragile.abilities.push({id="hurt",func=fragile.hurt});
+    fragile.copy = function() return FragileAilment(); end
+    return fragile;
+end
+CursedAilment = function()
+    local cursed = Perk("cursed");
+    cursed.isAilment = true;
+    cursed.faint = function(done)
+        local team = cursed.owner.getTeam();
+        team = team.getAllPets();
+        team.removeElement(cursed.owner);
+        if #team > 0 then
+            local randomTeammate = team[math.random(#team)];
+            randomTeammate.gainPerk(CursedAilment());
+            done();
+        else
+            done();
+        end
+    end
+    cursed.abilities.push({id="faint",func=cursed.faint});
+    cursed.copy = function() return CursedAilment(); end
+    return cursed;
+end
+DazedAilment = function()
+    local dazed = Perk("dazed");
+    dazed.isAilment = true;
+    dazed.copy = function() return DazedAilment(); end
+    return dazed;
+end
+SpookedAilment = function()
+    local spooked = Perk("extremelyspooked");
+    spooked.isAilment = true;
+    spooked.defDown = 1;
+    spooked.copy = function() return SpookedAilment(); end
+    return spooked;
+end
+ExtremelySpookedAilment = function()
+    local spooked = Perk("extremelyspooked");
+    spooked.isAilment = true;
+    spooked.defDown = 10;
+    spooked.copy = function() return ExtremelySpookedAilment(); end
+    return spooked;
+end
+WeakAilment = function()
+    local weak = Perk("weak");
+    weak.isAilment = true;
+    weak.defDown = 3;
+    weak.copy = function() return WeakAilment(); end
+    return weak;
+end
+ColdAilment = function()
+    local cold = Perk("cold");
+    cold.defDown = 5;
+    cold.isAilment = true;
+    cold.hurt = function(done,sourceAndAmount)
+        cold.owner.losePerk();
+        done();
+    end
+    cold.abilities.push({id="hurt",func=cold.hurt});
+    cold.copy = function() return ColdAilment(); end
+    return cold;
+end
+Quag = function()
+    local quag = Perk("quag");
+    quag.isAilment = true;
+    quag.isAlsoPerk = true; --whoops this is true for ailments by default until we get a thing that cares
+    quag.copy = function() return Quag(); end
+    return quag; --it doesn't do anything! yaaaaay!
+end
+trixieTier1Ailments = ArrayFromRawArray({ToastyAilment,SpookedAilment,Quag});
+trixieTier2Ailments = ArrayFromRawArray({ColdAilment,WeakAilment,CursedAilment});
+trixieTier3Ailments = ArrayFromRawArray({ExtremelySpookedAilment,DazedAilment,FragileAilment});

@@ -881,6 +881,160 @@ giveAbilitiesToPet = function(pet,copying)
             "Start of battle: Permanently give 3 attack and 6 HP to each friend with a different ailment."
         };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "jolteon" then
+        pet.friendFaints = function(done,friend)
+            if pet.level == 1 then
+                local pb = PeanutButterPerk();
+                pet.gainPerk(pb);
+            end
+            done();
+        end
+        pet.friendHurt = function(done,friend)
+            if pet.level > 1 then
+                local pb = PeanutButterPerk();
+                pet.gainPerk(pb);
+            end
+            if pet.level == 3 then
+                pet.hp = pet.hp + 10;
+            end
+            done();
+        end
+        pet.abilityText = {
+            "Friend faints: Gain Peanut Butter.",
+            "Friend hurt: Gain Peanut Butter.",
+            "Friend hurt: Gain Peanut Butter and 10 HP."
+        }
+        pet.abilities = ArrayFromRawArray({{id="friendFaints",func = pet.friendFaints},{id="friendHurt",func = pet.friendHurt}})
+    elseif pet.id == "zora" then
+        pet.afterAttack = function(done,opponent)
+            opponent.loseExp(pet.level);
+            if pet.level == 3 then 
+                opponent.loseExp(1);
+            end
+            game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + 1;
+            done();
+        end
+        pet.abilityText = {
+            "After attack: Remove 1 EXP from the opponent and gain 1 gold.",
+            "After attack: Remove 2 EXP from the opponent and gain 1 gold.",
+            "After attack: Remove 4 EXP from the opponent and gain 1 gold."
+        };
+        pet.abilities = ArrayFromRawArray({{id="afterAttack",func = pet.afterAttack}})
+    elseif pet.id == "trixie" then
+        pet.startOfBattle = function(done)
+            local pool = trixieTier1Ailments;
+            local targets = Array();
+            targets.push(pet);
+            targets.push(pet.getXthOpponentAhead(1));
+            targets.push(pet.getXthOpponentAhead(2));
+            if pet.level > 1 then
+                pool = pool.concat(trixieTier2Ailments);
+                targets.push(pet.getXthOpponentAhead(3));
+            end
+            if pet.level > 2 then
+                pool = pool.concat(trixieTier3Ailments);
+                targets.push(pet.getXthOpponentAhead(4));
+            end
+            targets.forEach(function(p) 
+                local randomAilmentFunc = pool[math.random(#pool)];
+                local ailment = randomAilmentFunc();
+                p.gainPerk(ailment);
+            end);
+            game.manager.triggerRandom();
+            done();
+        end
+        pet.abilityText = {
+            "Start of battle: Apply a Random tier 2 or lower ailment to the 2 nearest enemies and self.",
+            "Start of battle: Apply a Random tier 4 or lower ailment to the 3 nearest enemies and self.",
+            "Start of battle: Apply a Random tier 6 or lower ailment to the 4 nearest enemies and self."
+        };
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "graham" then
+        pet.abilityText = {
+            "Eaten: Eater gains 3 attack and 3 HP.",
+            "Eaten: Eater gains 10 attack and 10 HP.",
+            "Eaten: Eater gains this pet's attack and HP."
+        };
+    elseif pet.id == "greenpikachu" then
+        pet.beforeBattle = function(done)
+            local mates = pet.getTeammates();
+            if #mates == 0 then
+                done();
+                return;
+            end
+            local highest = mates[1];
+            if #mates > 1 then
+                for i=2,#mates,1 do
+                    if mates[i].tier > highest.tier then
+                        highest = mates[i];
+                    end
+                end
+            end
+            pet.transform(highest.id);
+            if pet.level > 1 then
+                if highest.atk > pet.atk then
+                    pet.atk = highest.atk;
+                end
+            end
+            if pet.level > 2 then
+                if highest.hp > pet.hp then
+                    pet.hp = highest.hp;
+                end
+            end
+            pet.gainPerk(ExtremelySpookedAilment());
+            done();
+        end
+        pet.abilityText = {
+            "Before battle: Transform into the highest-tier friend and gain Extremely Spooked.",
+            "Before battle: Transform into the highest-tier friend (including their attack, if higher) and gain Extremely Spooked.",
+            "Before battle: Transform into the highest-tier friend (including their attack and HP, if higher) and gain Extremely Spooked.",
+        };
+        pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
+    elseif pet.id == "wound" then
+        pet.beforeBattle = function(done)
+            local pos = pet.getIndex();
+            local neighborBehind = pet.getTeam().get(pos-1);
+            local neighborAhead = pet.getTeam().get(pos+1);
+            if (not neighborAhead) and (not neighborBehind) and (pos ~= 1) then
+                pet.woundActive = true;
+            else
+                pet.woundActive = false;
+            end
+            done();
+        end
+        pet.startOfBattle = function(done)
+            if pet.woundActive then
+                local et = pet.getEnemyTeam().getAllPets();
+                local target = et[1];
+                target.enemy = not target.enemy;
+                pet.getEnemyTeam().removePet(target);
+                pet.getTeam().summonPetAheadOf(pet,target,done);
+            else
+                done();
+            end
+        end
+        pet.abilityText = {
+            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet.",
+            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet.",
+            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet."
+        }
+        pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle},{id="beforeBattle",func = pet.beforeBattle}})
+    elseif pet.id == "lorelai" then
+        if not pet.oldDefense then
+            pet.oldDefense = pet.defense;
+        end
+        pet.defense = function()
+            if pet.getIndex() ~= 5 then
+                return pet.oldDefense() + (10*pet.level);
+            else 
+                return pet.oldDefense();
+            end
+        end
+        pet.abilityText = {
+            "If not in front: Takes 10 less damage and can't gain ailments.",
+            "If not in front: Takes 20 less damage and can't gain ailments.",
+            "If not in front: Takes 30 less damage and can't gain ailments."
+        }
     elseif pet.id == "craig" then
         pet.abilityText = {
             "Please: KILL ME!!!",

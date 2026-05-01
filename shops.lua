@@ -77,10 +77,26 @@ ItemShop = function()
             shop.contents = shop.contents.concat(frozen);
             for i=1,slotsLeftOver,1 do
                 local pickedTier = math.random(tier);
-                local idsAvailable = FoodTiers[pickedTier];
-                local foodId = idsAvailable[math.random(#idsAvailable)];
-                local food = Food(foodId);
-                shop.contents.push(food);
+                if pickedTier ~= 6 then
+                    local idsAvailable = FoodTiers[pickedTier];
+                    local foodId = idsAvailable[math.random(#idsAvailable)];
+                    local food = Food(foodId);
+                    shop.contents.push(food);
+                else
+                    local isGraham = math.random(4) == 1;
+                    if isGraham then
+                        local graham = Pet("graham");
+                        graham.fromShop = true;
+                        graham.isFromFoodShop = true;
+                        graham.discount = 0;
+                        shop.contents.push(graham);
+                    else
+                        local idsAvailable = FoodTiers[pickedTier];
+                        local foodId = idsAvailable[math.random(#idsAvailable)];
+                        local food = Food(foodId);
+                        shop.contents.push(food);
+                    end
+                end
             end
         end
     end
@@ -122,11 +138,28 @@ ItemShop = function()
     end
     shop.stockAdditionalRandomFood = function(discount)
         local pickedTier = math.random(game.run.tier);
-        local idsAvailable = FoodTiers[pickedTier];
-        local foodId = idsAvailable[math.random(#idsAvailable)];
-        local food = Food(foodId);
-        food.discount = discount;
-        shop.contents.push(food);
+        if pickedTier ~= 6 then
+            local idsAvailable = FoodTiers[pickedTier];
+            local foodId = idsAvailable[math.random(#idsAvailable)];
+            local food = Food(foodId);
+            food.discount = discount;
+            shop.contents.push(food);
+        else
+            local isGraham = math.random(4) == 1;
+            if isGraham then
+                local graham = Pet("graham");
+                graham.discount = discount;
+                graham.fromShop = true;
+                graham.isFromFoodShop = true;
+                shop.contents.push(graham);
+            else
+                local idsAvailable = FoodTiers[pickedTier];
+                local foodId = idsAvailable[math.random(#idsAvailable)];
+                local food = Food(foodId);
+                food.discount = discount;
+                shop.contents.push(food);
+            end
+        end
     end
     shop.applyGlobalDiscount = function(discount)
         for i=1,#shop.contents,1 do

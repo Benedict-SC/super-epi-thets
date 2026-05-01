@@ -143,6 +143,12 @@ Battle = function(friendly,enemy)
             if edmg < 0 then edmg = 0; end
             frontFriendly.hp = frontFriendly.hp - edmg;
             frontEnemy.hp = frontEnemy.hp - fdmg;
+            if frontFriendly.perk.id == "peanutbutter" and fdmg > 0 then
+                frontEnemy.hp = 0;
+            end
+            if frontEnemy.perk.id == "peanutbutter" and edmg > 0 then
+                frontFriendly.hp = 0;
+            end
             if frontFriendly.perk.id == "pepper" and frontFriendly.hp < 1 then
                 frontFriendly.hp = 1;
             end
