@@ -38,8 +38,8 @@ Game = function()
     game.enemyTeam.faceRight = false;
     game.enemyTeam.x = 960;
 
-    game.run.tier = 6;
-    game.run.gold = 99;
+    --game.run.tier = 6;
+    --game.run.gold = 99;
 
     game.fadeAlpha = 0;
 
