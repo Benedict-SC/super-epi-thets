@@ -95,6 +95,9 @@ Manager = function()
     end
     mng.triggerRandom = function()
         --interrupt/hijack current battle action to trigger random abilities
+        if mng.battle then
+            mng.battle.triggerForAll("randomThingHappens",nil,nil,true);
+        end
     end
     mng.triggerGoldSpent = function(amount)
         game.run.goldSpentThisTurn = game.run.goldSpentThisTurn + amount;

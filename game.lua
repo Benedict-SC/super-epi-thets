@@ -18,7 +18,7 @@ Game = function()
     mem2.perk.owner = mem2;
     game.team.get(1).addExp(2);
     --game.team.get(1).addExp(3);
-    game.team.addNewPet("percy");
+    game.team.addNewPet("yoomtah");
     --game.team.get(1).addExp(2);
     --game.team.get(1).addExp(3);
     game.team.addNewPet("gorou");

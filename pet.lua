@@ -831,6 +831,14 @@ PetMap["indus"] = {
     tier = 5;
     gender = "m";
 }
+PetMap["yoomtah"] = {
+    name = "Yoomtah";
+    atk = 7;
+    hp = 4;
+    img = "img/char/yoomtah.png";
+    tier = 5;
+    gender = "f";
+}
 PetMap["weh"] = {
     name = "Weh!";
     atk = 5;

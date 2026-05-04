@@ -83,7 +83,7 @@ giveAbilitiesToPet = function(pet,copying)
             local soupType = types[math.random(#types)];
 
             game.itemShop.stock(soupType);
-            game.manager.triggerRandom();
+            --game.manager.triggerRandom();
             done();
         end
         pet.abilityText = {
@@ -415,12 +415,14 @@ giveAbilitiesToPet = function(pet,copying)
                     game.manager.battle.dealDirectDamage(0,pet,target,function()
                         game.manager.battle.dealDirectDamage(dmg,target,pet,function()
                             pet.gainPerk(CursedAilment());
+                            game.manager.triggerRandom();
                             done();
                         end)
                     end)
                 else
                     game.manager.battle.dealDirectDamage(dmg,pet,target,function()
                         target.gainPerk(CursedAilment());
+                        game.manager.triggerRandom();
                         done();
                     end)
                 end
@@ -547,8 +549,9 @@ giveAbilitiesToPet = function(pet,copying)
                 cob.multiplier = 1 + pet.level;
                 local target = targets[math.random(#targets)];
                 cob.eat(target,cob);
-                done();
             end
+            game.manager.triggerRandom();
+            done();
         end
         pet.abilityText = {
             "Start of battle: Feed 4 corncobs to Random pets. Double effect on allies.",
@@ -760,6 +763,31 @@ giveAbilitiesToPet = function(pet,copying)
             "Start of battle: Give Coconut to self and friend ahead."
         };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
+    elseif pet.id == "yoomtah" then
+        pet.projectileUrl = "img/lightning.png";
+        pet.randomThingHappens = function(done)
+            local dmg = pet.level;
+            local oppTeam = pet.getEnemyTeam();
+            oppTeam = oppTeam.getAllPets();
+            local towers = oppTeam.filter(function(el) 
+                return el.id == "wizardtower";
+            end);
+            if #towers > 0 then
+                oppTeam = towers;
+            end
+            if #oppTeam <= 0 then
+                done();
+            else
+                local target = oppTeam[math.random(#oppTeam)];
+                game.manager.battle.dealDirectDamage(dmg,pet,target,done);
+            end
+        end
+        pet.abilityText = {
+            "Something Random happens: Zap a (lowercase-r) random enemy for 1 damage.",
+            "Something Random happens: Zap a (lowercase-r) random enemy for 2 damage.",
+            "Something Random happens: Zap a (lowercase-r) random enemy for 3 damage."
+        };
+        pet.abilities = ArrayFromRawArray({{id="randomThingHappens",func = pet.randomThingHappens}})
     elseif pet.id == "weh" then
         pet.beforeBattle = function(done)
             local pos = pet.getIndex();
@@ -824,7 +852,6 @@ giveAbilitiesToPet = function(pet,copying)
                 pet.getTeam().removePet(pet);
                 done();
             end
-            game.manager.triggerRandom();
         end
         pet.abilityText = {
             "Before battle: If no adjacent friends, gain 6 attack and HP.",
@@ -844,6 +871,7 @@ giveAbilitiesToPet = function(pet,copying)
         end
         pet.afterAttack = function(done,opponent)
             pet.defense = pet.defaultDefense;
+            game.manager.triggerRandom();
             done();
         end
         pet.abilityText = {
