@@ -247,6 +247,12 @@ giveAbilitiesToPet = function(pet,copying)
             "Sell: Stock one Donut Gun with triple effect."
         }
         pet.abilities = ArrayFromRawArray({{id="sell",func = pet.sell}})
+    elseif pet.id == "molly" then
+        pet.abilityText = {
+            "Molly can't receive perks or ailments. Existing perks and ailments have no effect.",
+            "Molly and adjacent pets can't receive perks/ailments. Existing perks and ailments have no effect.",
+            "Molly and pets within two spaces can't receive perks/ailments. Existing perks and ailments have no effect."
+        }
     elseif pet.id == "simphony" then
         pet.friendFaints = function(done,friend)
             pet.hp = pet.hp + 1 + ((pet.level-1)*2);
@@ -395,6 +401,12 @@ giveAbilitiesToPet = function(pet,copying)
             oppTeam = oppTeam.filter(function(el)
                 return el.gender == "f";
             end);
+            local towers = oppTeam.filter(function(el) 
+                return el.id == "wizardtower";
+            end);
+            if #towers > 0 then
+                oppTeam = towers;
+            end
             if #oppTeam <= 0 then
                 done();
             else
@@ -522,6 +534,12 @@ giveAbilitiesToPet = function(pet,copying)
     elseif pet.id == "scaregrow" then
         pet.startOfBattle = function(done)
             local targets = game.manager.battle.allPets();
+            local towers = targets.filter(function(el) 
+                return (el.id == "wizardtower") and (el.enemy ~= pet.enemy);
+            end);
+            if #towers > 0 then
+                targets = towers;
+            end
             local times = 2 + (pet.level*2)
             for i=1,times,1 do
                 local cob = Food("corn");
@@ -550,6 +568,32 @@ giveAbilitiesToPet = function(pet,copying)
             "Start of turn: Stock an additional Random food and apply a 3-gold senior discount."
         }
         pet.abilities = ArrayFromRawArray({{id="startOfTurn",func = pet.startOfTurn}})
+    elseif pet.id == "percy" then
+        pet.alreadySummoned = false;
+        pet.emptyBackSpace = function(done)
+            if not pet.alreadySummoned then
+                pet.alreadySummoned = true;
+                local wt = Pet("wizardtower");
+                local hp = (pet.level == 3) and 30 or ((pet.level == 2) and 15 or 5);
+                wt.atk = 1;
+                wt.hp = hp;
+                wt.enemy = pet.enemy;
+                pet.getTeam().addExistingPet(wt,1);
+            end
+            done();
+        end
+        pet.abilityText = {
+            "Empty back space: Summon a 1/5 Wizard Tower. Triggers once per battle.",
+            "Empty back space: Summon a 1/15 Wizard Tower. Triggers once per battle.",
+            "Empty back space: Summon a 1/30 Wizard Tower. Triggers once per battle."
+        };
+        pet.abilities = ArrayFromRawArray({{id="emptyBackSpace",func = pet.emptyBackSpace}})
+    elseif pet.id == "wizardtower" then
+        pet.abilityText = {
+            "Enemy ability targeted randomly: Redirect it to this tower.",
+            "Enemy ability targeted randomly: Redirect it to this tower.",
+            "Enemy ability targeted randomly: Redirect it to this tower."
+        };
     elseif pet.id == "arnold" then
         pet.boughtFood = function(done,food)
             game.itemShop.applyGlobalDiscount(pet.level);

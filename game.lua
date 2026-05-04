@@ -16,7 +16,9 @@ Game = function()
     local mem2 = game.team.get(1);
     mem2.perk = CursedAilment();
     mem2.perk.owner = mem2;
-    game.team.addNewPet("lorelai");
+    game.team.get(1).addExp(2);
+    --game.team.get(1).addExp(3);
+    game.team.addNewPet("percy");
     --game.team.get(1).addExp(2);
     --game.team.get(1).addExp(3);
     game.team.addNewPet("gorou");
@@ -29,7 +31,7 @@ Game = function()
     game.enemyTeam = Team();
     game.enemyTeam.addNewPet("stink",1)
     game.enemyTeam.get(1).addExp(1);
-    game.enemyTeam.addNewPet("simphony",2)
+    game.enemyTeam.addNewPet("scaregrow",2)
     game.enemyTeam.addNewPet("carcrash",4)
     game.enemyTeam.addNewPet("crapgorps",5)
     game.enemyTeam.get(5).addExp(2);

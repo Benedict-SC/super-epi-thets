@@ -101,6 +101,9 @@ Pet = function(id)
             --this is for lorelai's ability- checks oldDefense instead of her ID in case rick copied it
             return;
         end
+        if pet.isMollywhopped() then
+            return;
+        end
         pet.losePerk();
         pet.perk = perk;
         pet.perk.owner = pet;
@@ -151,6 +154,9 @@ Pet = function(id)
         return newPet;
     end
     pet.allAbilities = function()
+        if pet.isMollywhopped() then
+            return pet.abilities.concat(Array());
+        end
         return pet.abilities.concat(pet.perk.abilities);
     end
     pet.triggerOne = function(triggerType,args,done,defer)
@@ -223,7 +229,9 @@ Pet = function(id)
         end
         love.graphics.setColor(1,1,1);
         --draw perk
-            love.graphics.draw(pet.perk.img,xoff+10+pet.x,yoff+60+pet.y);
+            if not pet.isMollywhopped() then
+                love.graphics.draw(pet.perk.img,xoff+10+pet.x,yoff+60+pet.y);
+            end
         --draw other stuff
         if pet.fainted then
             love.graphics.draw(bandage,xoff+20,yoff+20);
@@ -233,6 +241,23 @@ Pet = function(id)
         end
         if pet.fromShop then
             love.graphics.draw(dice[pet.tier],xoff+pet.x,yoff+pet.y-5);
+        end
+        if pet.id == "molly" and not pet.fromShop then
+            love.graphics.setColor(0.17,0.8,0.49,0.29);
+            love.graphics.ellipse(  "fill",
+                                    xoff+ ((xscale == -1) and 100 or 0) + pet.x + 50,
+                                    yoff+pet.y+50,
+                                    (50 + (100* (pet.level - 1)))*1.11,
+                                    (50 + (100* (pet.level - 1)))*0.96
+            );
+            love.graphics.setColor(0.33,0.81,0.44,0.8);
+            love.graphics.ellipse(  "line",
+                                    xoff+ ((xscale == -1) and 100 or 0) + pet.x + 50,
+                                    yoff+pet.y+50,
+                                    (50 + (100* (pet.level - 1)))*1.11,
+                                    (50 + (100* (pet.level - 1)))*0.96
+            );
+            love.graphics.setColor(1,1,1);
         end
         --info box
         if pet.hovered then
@@ -450,6 +475,38 @@ Pet = function(id)
         local xoff = team.x + ( (pet.enemy and -1 or 1) * 100 * (index-1)) + pet.x;
         local yoff = team.y + pet.y;
         return {x=xoff,y=yoff};
+    end
+    pet.isMollywhopped = function()
+        local pos = pet.getIndex();
+        if pet.id == "molly" then return true; end
+        --check friendlies
+        local teammates = pet.getTeammates();
+        local mollies = teammates.filter(function(el) 
+            return el.id == "molly";
+        end);
+        for i=1,#mollies,1 do
+            local mol = mollies[i]
+            local molpos = mol.getIndex();
+            if math.abs(molpos-pos) < mol.level then
+                return true;
+            end
+        end
+        if game.manager.battle then
+            local enemies = pet.getEnemyTeam().getAllPets();
+            local relativePos = 5+(6-pos);
+            local badmollies = enemies.filter(function(el) 
+                return el.id == "molly";
+            end);
+            for i=1,#badmollies,1 do
+                local mol = badmollies[i]
+                local molpos = mol.getIndex();
+                if math.abs(molpos-relativePos) < mol.level then
+                    return true;
+                end
+            end
+        end
+        return false;
+
     end
     pet.transform = function(newId)
         local template = PetMap[newId];
@@ -699,6 +756,23 @@ PetMap["howdy"] = {
     img = "img/char/howdy.png";
     tier = 4;
     gender = "m";
+}
+PetMap["percy"] = {
+    name = "Percy";
+    atk = 4;
+    hp = 4;
+    img = "img/char/percy.png";
+    tier = 4;
+    gender = "f";
+}
+PetMap["wizardtower"] = {
+    name = "Wizard Tower";
+    atk = 1;
+    hp = 1;
+    img = "img/char/wizardtower.png";
+    tier = 4;
+    notBuyable = true;
+    gender = "f"; --for stink targeting purposes. protects percy.
 }
 PetMap["arnold"] = {
     name = "Arnold";

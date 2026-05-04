@@ -52,9 +52,43 @@ Battle = function(friendly,enemy)
     battle.lineUp = function(next)
         battle.friendly.lineUp(function() 
             battle.enemy.lineUp(function()
-                asyn.wait(0.12,next);
+                battle.handleEmptyBackSpaceAbilities(function()
+                    asyn.wait(0.12,next);
+                end)
             end);
         end);
+    end
+    battle.handleEmptyBackSpaceAbilities = function(next)
+        local teams = {game.team,game.enemyTeam};
+        for i=1,#teams,1 do --just the two
+            local team = teams[i];
+            local emptySpaces = Array();
+            for j=1,5,1 do
+                if not team.get(j) then
+                    emptySpaces.push(j);
+                end
+            end
+            if #emptySpaces > 0 then
+                local pets = team.getAllPets();
+                table.sort(pets,function(p1,p2) 
+                    return p1.atk > p2.atk;
+                end);
+                local claimedSpace = false;
+                for j=1,#pets,1 do
+                    local pet = pets[j];
+                    pet.allAbilities().forEach(function(el) 
+                        if el.id == "emptyBackSpace" then
+                            game.abilityStack.registerAbilityTrigger(pet,"emptyBackSpace",el.func);
+                            claimedSpace = true;
+                        end
+                    end);
+                    if claimedSpace then 
+                        break; 
+                    end
+                end
+            end
+        end
+        game.abilityStack.startProcessing(next);
     end
     battle.removePet = function(pet)
         if pet.enemy then
@@ -143,16 +177,16 @@ Battle = function(friendly,enemy)
             if edmg < 0 then edmg = 0; end
             frontFriendly.hp = frontFriendly.hp - edmg;
             frontEnemy.hp = frontEnemy.hp - fdmg;
-            if frontFriendly.perk.id == "peanutbutter" and fdmg > 0 then
+            if frontFriendly.perk.id == "peanutbutter" and (not frontFriendly.isMollywhopped()) and fdmg > 0 then
                 frontEnemy.hp = 0;
             end
-            if frontEnemy.perk.id == "peanutbutter" and edmg > 0 then
+            if frontEnemy.perk.id == "peanutbutter" and (not frontEnemy.isMollywhopped()) and edmg > 0 then
                 frontFriendly.hp = 0;
             end
-            if frontFriendly.perk.id == "pepper" and frontFriendly.hp < 1 then
+            if frontFriendly.perk.id == "pepper" and (not frontFriendly.isMollywhopped()) and frontFriendly.hp < 1 then
                 frontFriendly.hp = 1;
             end
-            if frontEnemy.perk.id == "pepper" and frontEnemy.hp < 1 then
+            if frontEnemy.perk.id == "pepper" and (not frontEnemy.isMollywhopped()) and frontEnemy.hp < 1 then
                 frontEnemy.hp = 1;
             end
             sound.randomSmack();
@@ -211,12 +245,12 @@ Battle = function(friendly,enemy)
         end,function() 
             battle.extras.removeElement(projectile);
             target.hp = target.hp - totalDamage;
-            if target.perk.id == "pepper" then
+            if target.perk.id == "pepper" and (not target.isMollywhopped()) then
                 if target.hp <= 0 then
                     target.hp = 1;
                 end
                 target.losePerk();
-            elseif target.perk.id == "melon" or target.perk.id == "coconut" then
+            elseif (target.perk.id == "melon" or target.perk.id == "coconut") and (not target.isMollywhopped()) then
                 target.losePerk();
             end
             if totalDamage == 0 then
@@ -293,6 +327,7 @@ Battle = function(friendly,enemy)
             end,function() 
                 game.fadeAlpha = 0;
                 game.manager.state = "START";
+                game.manager.battle = nil;
                 game.manager.startTurn();
             end);
         end)
