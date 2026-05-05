@@ -69,6 +69,8 @@ Game = function()
             game.itemShop.draw();
             game.manager.draw();
         end
+        game.manager.drawExtras();
+        game.manager.drawParticles();
         if game.manager.battle then
             game.manager.battle.draw();
         end

@@ -172,12 +172,18 @@ Pet = function(id)
 
     pet.draw = function(xoff,yoff,xscale)
         pushColor();
+
+        local fade = 0;
+        if pet.fade then fade = pet.fade; end
+
         if pet.discount and pet.discount > 0 then
             love.graphics.draw(discount,xoff+pet.x+22,yoff+pet.y-15);
             love.graphics.print(3-pet.discount,xoff+pet.x+52,yoff+pet.y-21)
         end
         if pet.inputState == "DRAGGING" then
             love.graphics.setColor(0,0,0);
+        else
+            love.graphics.setColor(1,1,1,1-fade);
         end
         love.graphics.draw(pet.img,xoff+ ((xscale == -1) and 100 or 0) + pet.x,yoff+pet.y,0,xscale,1);
         if game.manager.state == "SHOP" then

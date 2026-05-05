@@ -5,3 +5,4 @@ discount = love.graphics.newImage("img/discount.png");
 levelbg = love.graphics.newImage("img/level.png");
 dice = {love.graphics.newImage("img/tier1.png"), love.graphics.newImage("img/tier2.png"), love.graphics.newImage("img/tier3.png"), love.graphics.newImage("img/tier4.png"), love.graphics.newImage("img/tier5.png"), love.graphics.newImage("img/tier6.png"), love.graphics.newImage("img/tier7.png")};
 tumpet = love.graphics.newImage("img/oddtrumpets.png");
+star = love.graphics.newImage("img/star.png");

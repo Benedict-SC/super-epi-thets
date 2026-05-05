@@ -112,6 +112,28 @@ Manager = function()
             end);
         end
     end
+    mng.animateThrow = function(source, target, projectileImgUrl, onHit)
+        if not projectileImgUrl then
+            projectileImgUrl = source.projectileUrl;
+        end
+        local projectileImage = love.graphics.newImage(projectileImgUrl);
+        local origin = source.screenCenter();
+        origin.x = origin.x + 20;
+        local projectile = {img=projectileImage,x=origin.x,y=origin.y};
+        mng.extras.push(projectile);
+        local destination = target.screenCenter();
+        destination.x = destination.x + 20;
+        asyn.doOverTime(0.6,function(percent) 
+            local dx = destination.x - origin.x;
+            local dy = destination.y - origin.y;
+            local arcHeight = 120;
+            projectile.x = origin.x + (dx * percent);
+            projectile.y = origin.y + (dy * percent) - (4 * arcHeight * percent * (1 - percent));
+        end,function() 
+            mng.extras.removeElement(projectile);
+            onHit();
+        end);
+    end
     mng.flushStack = function()
         if (#game.abilityStack.stack > 0) and not game.abilityStack.callbackSet then
             mng.state = "ANIMATE";
@@ -269,6 +291,10 @@ Manager = function()
     mng.draw = function()
         mng.sellButton.draw();
         mng.rollButton.draw();
+        pushColor();
+        love.graphics.setColor(1,0.38,0);
+        love.graphics.draw(dice[game.run.tier],12,474);
+        popColor();
         mng.endButton.draw();
         for i=1,#mng.emptySlots,1 do
             mng.emptySlots[i].draw();
@@ -293,6 +319,57 @@ Manager = function()
             pushColor();
             love.graphics.setColor(0.95,0.33,0,1);
             love.graphics.print("" .. mng.selectedPet.getSellPrice(),mng.sellButton.x + 42,mng.sellButton.y + 45);
+            popColor();
+        end
+    end
+    mng.extras = Array();
+    mng.drawExtras = function()
+        for i=1,#(mng.extras),1 do
+            local extra = mng.extras[i];
+            if not extra then break; end
+            love.graphics.draw(extra.img,extra.x,extra.y);
+        end
+    end
+    mng.particles = Array();
+    mng.spawnStars = function(location)
+        local num = math.random(5,7);
+        for i=1,num,1 do
+            local randomAngularVelocity = math.random() * (math.pi/12); 
+            local neg = math.random(2);
+            local scale = math.random();
+            if neg == 1 then randomAngularVelocity = randomAngularVelocity * -1; end
+            local lifetime = 0.8 + ((math.random() * 0.2) - 0.1);
+            local starticle = {
+                img=star,
+                rvel = randomAngularVelocity,
+                xvel = (math.random() * 1.2)-0.6,
+                yvel= -1 * 
+                math.random(),
+                rot=0,
+                alpha = 1,
+                x=location.x,
+                y=location.y,
+                scale=scale,
+                oo=10
+            };
+            mng.particles.push(starticle);
+            asyn.doOverTime(lifetime,function(percent) 
+                starticle.rot = starticle.rot + starticle.rvel;
+                starticle.alpha = 1-percent;
+                starticle.yvel = starticle.yvel + 0.018;
+                starticle.x = starticle.x + starticle.xvel;
+                starticle.y = starticle.y + starticle.yvel;
+            end,function() 
+                mng.particles.removeElement(starticle);
+            end)
+        end
+    end
+    mng.drawParticles = function()
+        for i=1,#mng.particles,1 do
+            pushColor();
+            local p = mng.particles[i];
+            love.graphics.setColor(1,1,1,p.alpha);
+            love.graphics.draw(p.img,p.x,p.y,p.rot,p.scale,p.scale,p.oo,p.oo);
             popColor();
         end
     end

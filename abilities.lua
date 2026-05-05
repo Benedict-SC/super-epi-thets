@@ -36,14 +36,21 @@ giveAbilitiesToPet = function(pet,copying)
         pet.beforeBattle = function(done)
             local leavesAtOrBelow = 4-pet.level;
             if math.random(6) <= leavesAtOrBelow then
-                if pet.enemy then
-                    game.enemyTeam.removePet(pet);
-                else
-                    game.team.removePet(pet);
-                end
+                asyn.doOverTime(0.4,function(percent) 
+                    pet.fade = percent;
+                end,function() 
+                    if pet.enemy then
+                        game.enemyTeam.removePet(pet);
+                    else
+                        game.team.removePet(pet);
+                    end
+                    game.manager.triggerRandom();
+                    done();
+                end);
+            else
+                game.manager.triggerRandom();
+                done();
             end
-            game.manager.triggerRandom();
-            done();
         end
         pet.abilityText = {
             "Before battle: Randomly leaves (1/2 chance).",
@@ -59,8 +66,14 @@ giveAbilitiesToPet = function(pet,copying)
             elseif pet.level == 3 then
                 extraHealth = extraHealth * 2;
             end
-            pet.hp = pet.hp + extraHealth;
-            done();
+            if extraHealth > 0 then
+                game.manager.animateThrow(pet,pet,"img/heart.png",function()
+                    pet.hp = pet.hp + extraHealth;
+                    done();
+                end)
+            else
+                done();
+            end
         end
         pet.abilityText = {
             "Start of battle: Gain 1 health for each 2 battles fought.",
@@ -82,9 +95,11 @@ giveAbilitiesToPet = function(pet,copying)
             end]]--
             local soupType = types[math.random(#types)];
 
-            game.itemShop.stock(soupType);
-            --game.manager.triggerRandom();
-            done();
+            asyn.wait(0.2,function() 
+                game.itemShop.stock(soupType,true);
+                --game.manager.triggerRandom();
+                done();
+            end)
         end
         pet.abilityText = {
             "Start of turn: Stock a Random soup up to tier 2.",
@@ -125,12 +140,12 @@ giveAbilitiesToPet = function(pet,copying)
             end
             local pos = pet.screenCenter();
             local coin = {img=love.graphics.newImage("img/coin.png"),x=pos.x+50,y=pos.y};
-            game.manager.battle.extras.push(coin);
+            game.manager.extras.push(coin);
             asyn.doOverTime(0.4,function(percent) 
                 coin.y = math.floor(pos.y - (percent*60));
             end,function() 
                 asyn.wait(0.2,function() 
-                    game.manager.battle.extras.removeElement(coin);
+                    game.manager.extras.removeElement(coin);
                     done();
                 end)
             end)

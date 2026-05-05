@@ -20,10 +20,25 @@ PetShop = function()
             end
         end
     end
+    shop.lastStars = love.timer.getTime();
     shop.update = function()
         for i=1,#shop.contents,1 do
             local pet = shop.contents[i];
             pet.inputUpdate(shop.x + ((i-1) * 100),shop.y);
+        end
+        local time = love.timer.getTime();
+        if ((time - shop.lastStars) > 0.6) and game.manager.state == "SHOP" then
+            shop.lastStars = time;
+            for i=1,#shop.contents,1 do
+                local pet = shop.contents[i];
+                local party = game.team.getAllPets();
+                local matches = party.filter(function(el) 
+                    return el.id == pet.id;
+                end);
+                if #matches > 0 then
+                    game.manager.spawnStars({x=shop.x + (i*100) - 50,y=shop.y+90});
+                end
+            end
         end
     end
     shop.draw = function()
@@ -123,8 +138,13 @@ ItemShop = function()
             end);
         end);
     end
-    shop.stock = function(id)
+    shop.stock = function(id,highlight)
         shop.contents.push(Food(id));
+        if highlight then
+            local x = shop.x + (100 * #(shop.contents)) - 50;
+            local y = shop.y + 50;
+            game.manager.spawnStars({x=x,y=y});
+        end
     end
     shop.getFrozenFood = function()
         local frozen = Array();
