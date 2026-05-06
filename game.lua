@@ -61,7 +61,7 @@ Game = function()
         game.field.draw();
         game.run.draw();
         game.team.draw();
-        if game.manager.state == "BATTLE" then
+        if (game.manager.state == "BATTLE") or ((game.manager.state == "ANIMATE") and game.manager.battle) then
             game.enemyTeam.draw();
         end
         if not game.manager.hideUI then

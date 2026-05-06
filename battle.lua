@@ -321,13 +321,13 @@ Battle = function(friendly,enemy)
             --hide UI
             game.manager.hideUI = false;
             game.manager.state = "ANIMATE";
+            game.manager.battle = nil;
             --fade back in
             asyn.doOverTime(0.8,function(percent) 
                 game.fadeAlpha = 1-percent;
             end,function() 
                 game.fadeAlpha = 0;
                 game.manager.state = "START";
-                game.manager.battle = nil;
                 game.manager.startTurn();
             end);
         end)

@@ -112,7 +112,7 @@ Manager = function()
             end);
         end
     end
-    mng.animateThrow = function(source, target, projectileImgUrl, onHit)
+    mng.animateThrow = function(source, target, projectileImgUrl, onHit,timeOverride)
         if not projectileImgUrl then
             projectileImgUrl = source.projectileUrl;
         end
@@ -123,7 +123,8 @@ Manager = function()
         mng.extras.push(projectile);
         local destination = target.screenCenter();
         destination.x = destination.x + 20;
-        asyn.doOverTime(0.6,function(percent) 
+        game.manager.state = "ANIMATE"
+        asyn.doOverTime(timeOverride or 0.6,function(percent) 
             local dx = destination.x - origin.x;
             local dy = destination.y - origin.y;
             local arcHeight = 120;
@@ -132,6 +133,11 @@ Manager = function()
         end,function() 
             mng.extras.removeElement(projectile);
             onHit();
+            if game.manager.battle then
+                game.manager.state = "BATTLE";
+            else
+                game.manager.state = "SHOP";
+            end
         end);
     end
     mng.flushStack = function()

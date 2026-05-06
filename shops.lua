@@ -41,7 +41,7 @@ PetShop = function()
                 local pet = shop.contents[i];
                 local party = game.team.getAllPets();
                 local matches = party.filter(function(el) 
-                    return el.id == pet.id;
+                    return (el.id == pet.id) and (el.level < 3);
                 end);
                 if #matches > 0 then
                     game.manager.spawnStars({x=shop.x + (i*100) - 50,y=shop.y+90});
@@ -171,9 +171,7 @@ ItemShop = function()
     shop.stock = function(id,highlight)
         shop.contents.push(Food(id));
         if highlight then
-            local x = shop.x + (100 * #(shop.contents)) - 50;
-            local y = shop.y + 50;
-            game.manager.spawnStars({x=x,y=y});
+            shop.highlightLast();
         end
     end
     shop.getFrozenFood = function()
@@ -186,6 +184,11 @@ ItemShop = function()
         end
         return frozen;
     end
+    shop.highlightLast = function()
+        local x = shop.x + (100 * #(shop.contents)) - 50;
+        local y = shop.y + 50;
+        game.manager.spawnStars({x=x,y=y});
+    end
     shop.stockAdditionalRandomFood = function(discount)
         local pickedTier = math.random(game.run.tier);
         if pickedTier ~= 6 then
@@ -194,6 +197,7 @@ ItemShop = function()
             local food = Food(foodId);
             food.discount = discount;
             shop.contents.push(food);
+            shop.highlightLast();
         else
             local isGraham = math.random(4) == 1;
             if isGraham then
@@ -202,12 +206,14 @@ ItemShop = function()
                 graham.fromShop = true;
                 graham.isFromFoodShop = true;
                 shop.contents.push(graham);
+                shop.highlightLast();
             else
                 local idsAvailable = FoodTiers[pickedTier];
                 local foodId = idsAvailable[math.random(#idsAvailable)];
                 local food = Food(foodId);
                 food.discount = discount;
                 shop.contents.push(food);
+                shop.highlightLast();
             end
         end
     end

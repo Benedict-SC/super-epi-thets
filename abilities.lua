@@ -287,8 +287,10 @@ giveAbilitiesToPet = function(pet,copying)
         }
     elseif pet.id == "simphony" then
         pet.friendFaints = function(done,friend)
-            pet.hp = pet.hp + 1 + ((pet.level-1)*2);
-            done();
+            game.manager.animateThrow(pet,pet,"img/heart.png",function()
+                pet.hp = pet.hp + 1 + ((pet.level-1)*2);
+                done();
+            end)
         end
         pet.abilityText = {
             "Friend faints: Gain 1 HP.",
@@ -318,8 +320,10 @@ giveAbilitiesToPet = function(pet,copying)
             local teammates = pet.getTeam().getAllPets();
             teammates.removeElement(pet);
             local randomTeammate = teammates[math.random(#teammates)];
-            randomTeammate.hp = randomTeammate.hp + (gold*pet.level);
-            done();
+            game.manager.animateThrow(pet,randomTeammate,"img/heart.png",function()
+                randomTeammate.hp = randomTeammate.hp + (gold*pet.level);
+                done();
+            end);
         end
         pet.abilityText = {
             "Spent gold past 10: Give that much health to a random teammate.",
@@ -329,8 +333,10 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="spentGoldPastTen",func=pet.spentGoldPastTen}});
     elseif pet.id == "bugsy" then
         pet.ateFood = function(done,tier)
-            pet.tempAtk = pet.tempAtk + (pet.level * tier);
-            done();
+            game.manager.animateThrow(pet,pet,"img/punch.png",function()
+                pet.tempAtk = pet.tempAtk + (pet.level * tier);
+                done();
+            end);
         end
         pet.abilityText = {
             "Ate food: Gain attack equal to its tier until next turn.",
@@ -340,9 +346,11 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="ateFood",func=pet.ateFood}});
     elseif pet.id == "gacha" then
         pet.friendSold = function(done,friend) 
-            pet.atk = pet.atk + pet.level;
-            pet.hp = pet.hp + pet.level;
-            done();
+            game.manager.animateThrow(pet,pet,"img/heartfulpunch.png",function()
+                pet.atk = pet.atk + pet.level;
+                pet.hp = pet.hp + pet.level;
+                done();
+            end);
         end
         pet.abilityText = {
             "Friend sold: Gain 1 attack and 1 health.",
@@ -395,9 +403,13 @@ giveAbilitiesToPet = function(pet,copying)
             local slot = pet.getIndex();
             local friendAhead = game.team.get(slot+1);
             if friendAhead then
-                friendAhead.hp = friendAhead.hp + (2*pet.level);
+                game.manager.animateThrow(pet,friendAhead,"img/heart.png",function()
+                    friendAhead.hp = friendAhead.hp + (2*pet.level);
+                    done();
+                end);
+            else
+                done();
             end
-            done();
         end
         pet.abilityText = {
             "End of turn: Give friend ahead 2 health.",
@@ -406,17 +418,29 @@ giveAbilitiesToPet = function(pet,copying)
         }
         pet.abilities = ArrayFromRawArray({{id="endOfTurn",func=pet.endOfTurn}});
     elseif pet.id == "mera" then
+        pet.projectileUrl = "img/perk/fragile.png";
         pet.hurt = function(done,sourceAndAmount)
-            local selfFragile = FragileAilment();
-            pet.gainPerk(selfFragile);
+            local targets = Array();
+            targets.push(pet);
             for i=1,pet.level,1 do
                 local opp = pet.getXthOpponentAhead(i);
-                if opp then
-                    local frag = FragileAilment();
-                    opp.gainPerk(frag);
+                if opp and (opp.perk.id ~= "fragile") then
+                    targets.push(opp);
                 end
             end
-            done();
+            local fragFuncs = Array();
+            for i=1,#targets,1 do
+                local targ = targets[i];
+                local frag = FragileAilment();
+                
+                local fragFunc = function(next)
+                    game.manager.animateThrow(pet,targ,nil,function()
+                        targ.gainPerk(frag,next);
+                    end,0.4);
+                end
+                fragFuncs.push(fragFunc)
+            end
+            asyn.runSerial(fragFuncs,done);
         end
         pet.abilityText = {
             "Hurt: Apply Fragile to self and first enemy ahead.",
@@ -494,9 +518,12 @@ giveAbilitiesToPet = function(pet,copying)
     elseif pet.id == "naven" then
         pet.friendAteFood = function(done,food)
             if (food.id == "apple") or (food.id == "betterapple") or (food.id == "bestapple") then
-                pet.atk = pet.atk + pet.level;
-                pet.hp = pet.hp + pet.level;
-                game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
+                game.manager.animateThrow(pet,pet,"img/heartfulpunch.png",function()
+                    pet.atk = pet.atk + pet.level;
+                    pet.hp = pet.hp + pet.level;
+                    game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
+                    done();
+                end);
             end
         end
         pet.abilityText = {
@@ -575,15 +602,22 @@ giveAbilitiesToPet = function(pet,copying)
                 targets = towers;
             end
             local times = 2 + (pet.level*2)
+            local cobFuncs = Array();
             for i=1,times,1 do
                 local cob = Food("corn");
                 cob.enemy = pet.enemy;
                 cob.multiplier = 1 + pet.level;
                 local target = targets[math.random(#targets)];
-                cob.eat(target,cob);
+                local cobFunc = function(next)
+                    game.manager.animateThrow(pet,target,"img/corn.png",function() 
+                        cob.eat(target,cob);
+                        next();
+                    end,0.3)
+                end
+                cobFuncs.push(cobFunc);
             end
             game.manager.triggerRandom();
-            done();
+            asyn.runSerial(cobFuncs,done);
         end
         pet.abilityText = {
             "Start of battle: Feed 4 corncobs to Random pets. Double effect on allies.",
@@ -593,7 +627,7 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func=pet.startOfBattle}});
     elseif pet.id == "howdy" then
         pet.startOfTurn = function(done)
-            game.itemShop.stockAdditionalRandomFood(pet.level);
+            game.itemShop.stockAdditionalRandomFood(pet.level,true);
             game.manager.triggerRandom();
             done();
         end

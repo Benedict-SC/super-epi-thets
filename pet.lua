@@ -208,8 +208,8 @@ Pet = function(id)
         love.graphics.setColor(1,1,1);
         love.graphics.draw(game.team.statsIndicator,xoff + 5 + pet.x, yoff + 90)
         love.graphics.setColor(0,0,0);
-        local atkOffset = (pet.atk > 9) and -6 or 0;
-        local hpOffset = (pet.hp > 9) and -6 or 0;
+        local atkOffset = ((pet.atk + pet.tempAtk) > 9) and -6 or 0;
+        local hpOffset = ((pet.hp + pet.tempHp) > 9) and -6 or 0;
         love.graphics.print("" .. (pet.atk + pet.tempAtk),xoff + 24 + pet.x + atkOffset, yoff + 91);
         love.graphics.print("" .. (pet.hp + pet.tempHp),xoff + 72 + pet.x + hpOffset, yoff + 89);
         love.graphics.setColor(1,1,1);
