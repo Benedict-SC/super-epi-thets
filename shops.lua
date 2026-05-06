@@ -9,6 +9,14 @@ PetShop = function()
         if slotsLeftOver >= 1 then
             shop.contents = Array();
             shop.contents = shop.contents.concat(frozen);
+            shop.contents.forEach(function(x) 
+                if x.linkedPet then
+                    if not shop.contents.contains(x.linkedPet) then
+                        x.linkedPet = nil;
+                        x.linkDraw = false;
+                    end
+                end
+            end);
             for i=1,slotsLeftOver,1 do
                 local pickedTier = math.random(tier);
                 local idsAvailable = PetTiers[pickedTier];
@@ -49,9 +57,31 @@ PetShop = function()
     end
     shop.buy = function(pet)
         shop.contents.removeElement(pet);
+        if pet.linkedPet then
+            shop.contents.removeElement(pet.linkedPet);
+            pet.linkedPet = nil;
+        end
     end
     shop.stock = function(id)
         shop.contents.push(Pet(id));
+    end
+    shop.levelUpBonusStock = function()
+        local tier = game.run.tier + 1;
+        if tier > 6 then tier = 6; end
+        
+        local idsAvailable = PetTiers[tier];
+        local petId = idsAvailable[math.random(#idsAvailable)];
+        local round2 = idsAvailable.filter(function(x) return x ~= petId; end);
+        local petId2 = round2[math.random(#round2)];
+        local pet = Pet(petId);
+        local pet2 = Pet(petId2);
+        pet.linkedPet = pet2;
+        pet2.linkedPet = pet;
+        pet.fromShop = true;
+        pet2.fromShop = true;
+        pet.linkDraw = true;
+        shop.contents.insert(pet2,1);  
+        shop.contents.insert(pet,1);         
     end
     shop.getFrozenPets = function()
         local frozen = Array();

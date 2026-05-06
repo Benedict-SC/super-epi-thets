@@ -108,24 +108,41 @@ giveAbilitiesToPet = function(pet,copying)
         }
         pet.abilities = ArrayFromRawArray({{id="startOfTurn",func = pet.startOfTurn}})
     elseif pet.id == "flamethrower" then
+        pet.projectileUrl = "img/perk/toasty.png";
         pet.beforeAttack = function(done,opponent)
+            local sequentialToasts = Array();
             local toasty1 = ToastyAilment();
-            opponent.gainPerk(toasty1);
+            local toast1Func = function(next)
+                game.manager.animateThrow(pet,opponent,nil,function()
+                    opponent.gainPerk(toasty1,next);
+                end)
+            end
+            sequentialToasts.push(toast1Func);
             if pet.level > 1 then
                 local opp2 = pet.getXthOpponentAhead(2);
                 if opp2 then
                     local toasty2 = ToastyAilment();
-                    opp2.gainPerk(toasty2)
+                    local toast2Func = function(next)
+                        game.manager.animateThrow(pet,opp2,nil,function()
+                            opp2.gainPerk(toasty2,next);
+                        end)
+                    end
+                    sequentialToasts.push(toast2Func)
                 end
             end
             if pet.level > 2 then
                 local opp3 = pet.getXthOpponentAhead(3);
                 if opp3 then
                     local toasty3 = ToastyAilment();
-                    opp3.gainPerk(toasty3)
+                    local toast3Func = function(next)
+                        game.manager.animateThrow(pet,opp3,nil,function()
+                            opp3.gainPerk(toasty3,next);
+                        end)
+                    end
+                    sequentialToasts.push(toast3Func)
                 end
             end
-            done();
+            asyn.runSerial(sequentialToasts,done);
         end
         pet.abilityText = {
             "Before attack: Give Toasty to the first enemy ahead.",
@@ -253,7 +270,7 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="somethingFlewOverhead",func = pet.somethingFlewOverhead}})
     elseif pet.id == "gorou" then
         pet.sell = function(done)
-            game.itemShop.stock("donutgun" .. pet.level);
+            game.itemShop.stock("donutgun" .. pet.level,true);
             done();
         end
         pet.abilityText = {

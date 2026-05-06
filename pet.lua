@@ -77,6 +77,9 @@ Pet = function(id)
             pet.level = 3;
             return;
         end
+        if game and not game.manager.battle then
+            game.petShop.levelUpBonusStock();
+        end
     end
     pet.loseExp = function(amt)
         if pet.xp == 0 then return; end
@@ -96,12 +99,14 @@ Pet = function(id)
         end
         pet.perk = Perk();
     end
-    pet.gainPerk = function(perk)
+    pet.gainPerk = function(perk,done,defer)
         if perk.isAilment and (pet.oldDefense) and (pet.getIndex() ~= 5) then
             --this is for lorelai's ability- checks oldDefense instead of her ID in case rick copied it
+            if done then done(); end
             return;
         end
         if pet.isMollywhopped() then
+            if done then done(); end
             return;
         end
         pet.losePerk();
@@ -121,7 +126,6 @@ Pet = function(id)
                     end
                 end);
             end);
-            game.abilityStack.startProcessing();
             local enemies = pet.getEnemyTeam().getAllPets();
             if game.manager.state == "BATTLE" then
                 enemies.forEach(function(en) 
@@ -132,8 +136,14 @@ Pet = function(id)
                     end);
                 end);
             end
+            if not defer then
+                game.abilityStack.startProcessing(done);
+            elseif done then
+                done();
+            end
         else
             --here's where we'd trigger gained-perk effects... TIMMY TURNER'S DAD MEME!!!
+            if done then done(); end
         end
     end
     pet.fling = function(pos,failedFilename)
@@ -247,6 +257,9 @@ Pet = function(id)
         end
         if pet.fromShop then
             love.graphics.draw(dice[pet.tier],xoff+pet.x,yoff+pet.y-5);
+        end
+        if pet.linkedPet and pet.linkDraw then
+            love.graphics.draw(petlink,xoff+pet.x+68,yoff+pet.y+118);
         end
         if pet.id == "molly" and not pet.fromShop then
             love.graphics.setColor(0.17,0.8,0.49,0.29);
