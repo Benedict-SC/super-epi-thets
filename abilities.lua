@@ -16,7 +16,7 @@ giveAbilitiesToPet = function(pet,copying)
     pet.friendGainedAilment = function(done,friend) done(); end
     pet.opponentGainedAilment = function(done,opponent) done(); end
     pet.spentGoldPastTen = function(done,gold) done(); end
-    pet.randomThingHappens = function(done) done(); end
+    pet.randomThingHappens = function(done,inbattle) done(); end
     pet.emptyBackSpace = function(done) done(); end
     pet.friendAteFood = function(done,food) done(); end
     pet.ateFood = function(done,tier) done(); end
@@ -84,20 +84,20 @@ giveAbilitiesToPet = function(pet,copying)
     elseif pet.id == "giovanni" then
         pet.startOfTurn = function(done)
             local types1 = ArrayFromRawArray({"waterysoup","toohot"});
-            --local types2 = ArrayFromRawArray({"spellemup","oftheday"});
+            local types2 = ArrayFromRawArray({"spellemup","oftheday"});
             --local types3 = ArrayFromRawArray({"cocoasoup","lavacid"});
             local types = types1;
-            --[[if pet.level > 1 then
+            if pet.level > 1 then
                 types = types.concat(types2);
             end
-            if pet.level > 2 then
+            --[[if pet.level > 2 then
                 types = types.concat(types3);
             end]]--
             local soupType = types[math.random(#types)];
 
             asyn.wait(0.2,function() 
                 game.itemShop.stock(soupType,true);
-                --game.manager.triggerRandom();
+                game.manager.triggerRandom();
                 done();
             end)
         end
@@ -111,10 +111,13 @@ giveAbilitiesToPet = function(pet,copying)
         pet.projectileUrl = "img/perk/toasty.png";
         pet.beforeAttack = function(done,opponent)
             local sequentialToasts = Array();
+            local finishToasts = function()
+                game.abilityStack.startProcessing(done);
+            end
             local toasty1 = ToastyAilment();
             local toast1Func = function(next)
                 game.manager.animateThrow(pet,opponent,nil,function()
-                    opponent.gainPerk(toasty1,next);
+                    opponent.gainPerk(toasty1,next,true);
                 end)
             end
             sequentialToasts.push(toast1Func);
@@ -124,7 +127,7 @@ giveAbilitiesToPet = function(pet,copying)
                     local toasty2 = ToastyAilment();
                     local toast2Func = function(next)
                         game.manager.animateThrow(pet,opp2,nil,function()
-                            opp2.gainPerk(toasty2,next);
+                            opp2.gainPerk(toasty2,next,true);
                         end)
                     end
                     sequentialToasts.push(toast2Func)
@@ -136,13 +139,13 @@ giveAbilitiesToPet = function(pet,copying)
                     local toasty3 = ToastyAilment();
                     local toast3Func = function(next)
                         game.manager.animateThrow(pet,opp3,nil,function()
-                            opp3.gainPerk(toasty3,next);
+                            opp3.gainPerk(toasty3,next,true);
                         end)
                     end
                     sequentialToasts.push(toast3Func)
                 end
             end
-            asyn.runSerial(sequentialToasts,done);
+            asyn.runSerial(sequentialToasts,finishToasts);
         end
         pet.abilityText = {
             "Before attack: Give Toasty to the first enemy ahead.",
@@ -322,13 +325,14 @@ giveAbilitiesToPet = function(pet,copying)
             local randomTeammate = teammates[math.random(#teammates)];
             game.manager.animateThrow(pet,randomTeammate,"img/heart.png",function()
                 randomTeammate.hp = randomTeammate.hp + (gold*pet.level);
+                game.manager.triggerRandom();
                 done();
             end);
         end
         pet.abilityText = {
-            "Spent gold past 10: Give that much health to a random teammate.",
-            "Spent gold past 10: Give twice that much health to a random teammate.",
-            "Spent gold past 10: Give three times that much health to a random teammate."
+            "Spent gold past 10: Give that much health to a Random teammate.",
+            "Spent gold past 10: Give twice that much health to a Random teammate.",
+            "Spent gold past 10: Give three times that much health to a Random teammate."
         }
         pet.abilities = ArrayFromRawArray({{id="spentGoldPastTen",func=pet.spentGoldPastTen}});
     elseif pet.id == "bugsy" then
@@ -677,33 +681,39 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="boughtFood",func = pet.boughtFood}})
     elseif pet.id == "trefor" then
         pet.startOfBattle = function(done)
-            local quag = Quag();
-            pet.gainPerk(quag);
+            local targets = Array();
+            targets.push(pet);
             if pet.level == 2 then
                 local pos = pet.getIndex();
                 local behind = pet.getTeam().get(pos-1);
                 local ahead = pet.getTeam().get(pos+1);
                 if behind and (behind.perk.id == "default" or behind.perk.isAilment) then
-                    local q2 = Quag();
-                    behind.gainPerk(q2);
+                    targets.push(behind);
                 end
                 if ahead and (ahead.perk.id == "default" or ahead.perk.isAilment) then
-                    local q2 = Quag();
-                    ahead.gainPerk(q2);
+                    targets.push(ahead);
                 end
-                done();
             elseif pet.level == 3 then
-                local all = pet.getTeam().getAllPets();
+                local all = pet.getTeammates();
                 all.forEach(function(el)
                     if el.perk.id == "default" or el.perk.isAilment then
-                        local q2 = Quag();
-                        el.gainPerk(q2);
+                        targets.push(el);
                     end
                 end)
-                done();
-            else
-                done();
             end
+            local quagFuncs = Array();
+            for i=1,#targets,1 do
+                local targ = targets[i];
+                local quag = Quag();
+                
+                local quagFunc = function(next)
+                    game.manager.animateThrow(pet,targ,"img/perk/quag.png",function()
+                        targ.gainPerk(quag,next);
+                    end,0.3);
+                end
+                quagFuncs.push(quagFunc)
+            end
+            asyn.runSerial(quagFuncs,done);
         end
         pet.abilityText = {
             "Start of battle: Gain Quag. (Quag is both a perk and an ailment.)",
@@ -818,10 +828,19 @@ giveAbilitiesToPet = function(pet,copying)
             local ownCopy = perk.copy();
             local teammateInFront = pet.getTeam().get(pet.getIndex() + 1);
             if teammateInFront then
-                teammateInFront.gainPerk(perk);
+                game.manager.animateThrow(pet,pet,perk.imgUrl,function()
+                    pet.gainPerk(ownCopy);
+                    game.manager.animateThrow(pet,teammateInFront,perk.imgUrl,function()
+                        teammateInFront.gainPerk(perk);
+                        done();
+                    end)
+                end)
+            else
+                game.manager.animateThrow(pet,pet,perk.imgUrl,function()
+                    pet.gainPerk(ownCopy);
+                    done();
+                end)
             end
-            pet.gainPerk(ownCopy);
-            done();
         end
         pet.abilityText = {
             "Start of battle: Give Pepper to self and friend ahead.",
@@ -831,7 +850,11 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "yoomtah" then
         pet.projectileUrl = "img/lightning.png";
-        pet.randomThingHappens = function(done)
+        pet.randomThingHappens = function(done,inbattle)
+            if not inbattle then 
+                done(); 
+                return;
+            end
             local dmg = pet.level;
             local oppTeam = pet.getEnemyTeam();
             oppTeam = oppTeam.getAllPets();
@@ -860,10 +883,14 @@ giveAbilitiesToPet = function(pet,copying)
             local neighborBehind = pet.getTeam().get(pos-1);
             local neighborAhead = pet.getTeam().get(pos+1);
             if (not neighborAhead) and (not neighborBehind) then
-                pet.atk = pet.atk + (6*pet.level);
-                pet.hp = pet.hp + (6*pet.level);
+                game.manager.animateThrow(pet,pet,"img/heartfulpunch.png",function()
+                    pet.atk = pet.atk + (6*pet.level);
+                    pet.hp = pet.hp + (6*pet.level);
+                    done();
+                end)
+            else
+                done();
             end
-            done();
         end
         pet.abilityText = {
             "Before battle: If no adjacent friends, gain 6 attack and HP.",
@@ -873,10 +900,12 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
     elseif pet.id == "howie" then
         pet.friendGainedAilment = function(done,friend)
-            friend.atk = friend.atk + pet.level;
-            local honey = HoneyedSnackPerk();
-            friend.gainPerk(honey);
-            done();
+            game.manager.animateThrow(pet,friend,"img/perk/honeyedsnack.png",function()
+                friend.atk = friend.atk + pet.level;
+                local honey = HoneyedSnackPerk();
+                friend.gainPerk(honey);
+                done();
+            end);
         end
         pet.abilityText = {
             "Friend gained ailment: Replace it with Honeyed Snack and give +1 attack.",
@@ -889,10 +918,16 @@ giveAbilitiesToPet = function(pet,copying)
         pet.beforeAttack = function(done,opponent)
             if pet.falseSwipesUsed <= (2*pet.level) then
                 pet.falseSwipesUsed = pet.falseSwipesUsed + 1;
-                pet.hp = pet.hp + (2*pet.level);
-                opponent.gainPerk(PepperPerk());
+                game.manager.animateThrow(pet,pet,"img/heart.png",function()
+                    pet.hp = pet.hp + (2*pet.level);
+                    game.manager.animateThrow(pet,opponent,"img/perk/pepper.png",function()
+                        opponent.gainPerk(PepperPerk());
+                        done();
+                    end);
+                end)
+            else
+                done();
             end
-            done();
         end
         pet.abilityText = {
             "Before attack: Gain 2 HP and give the opponent Pepper. Triggers 2 times per battle.",
@@ -908,12 +943,19 @@ giveAbilitiesToPet = function(pet,copying)
             end);
             if #lowEnough > 0 then
                 local picked = lowEnough[math.random(#lowEnough)];
-                picked.getTeam().removePet(picked);
-                pet.getTeam().removePet(pet);
-                if #lowEnough > 1 then
-                    game.manager.triggerRandom();
-                end
-                done();
+                asyn.doOverTime(0.6,function(percent) 
+                    pet.fade = percent;
+                    if picked then
+                        picked.fade = percent;
+                    end
+                end,function() 
+                    picked.getTeam().removePet(picked);
+                    pet.getTeam().removePet(pet);
+                    if #lowEnough > 1 then
+                        game.manager.triggerRandom();
+                    end
+                    done();
+                end);
             else
                 pet.getTeam().removePet(pet);
                 done();
@@ -969,9 +1011,15 @@ giveAbilitiesToPet = function(pet,copying)
                     ailmentTypes.push(tm.perk.id);
                 end
             end);
-            pet.atk = pet.atk + (#ailmentTypes * pet.level);
-            pet.hp = pet.hp + (#ailmentTypes * 2 * pet.level);
-            done();
+            if #ailmentTypes > 0 then
+                game.manager.animateThrow(pet,pet,"img/heartfulpunch.png",function()
+                    pet.atk = pet.atk + (#ailmentTypes * pet.level);
+                    pet.hp = pet.hp + (#ailmentTypes * 2 * pet.level);
+                    done();
+                end);
+            else
+                done();
+            end
         end
         pet.abilityText = {
             "Start of battle: Gain 1 HP and 2 attack for each unique friendly ailment.",
@@ -980,18 +1028,30 @@ giveAbilitiesToPet = function(pet,copying)
         };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "vampirebat" then
+        pet.vampTriggerCount = 0;
         pet.opponentGainedAilment = function(done,opponent)
-            game.manager.battle.dealDirectDamage(4*pet.level,pet,opponent,function()
-                local ddealt = (4*pet.level)-opponent.defense();
-                if ddealt < 0 then ddealt = 0; end
-                pet.hp = pet.hp + ddealt;
+            if pet.vampTriggerCount < 2 then
+                pet.vampTriggerCount = pet.vampTriggerCount + 1;
+                game.manager.battle.dealDirectDamage(4*pet.level,pet,opponent,function()
+                    local ddealt = (4*pet.level)-opponent.defense();
+                    if ddealt < 0 then ddealt = 0; end
+                    if ddealt == 0 then
+                        done();
+                    else
+                        game.manager.animateThrow(pet,pet,"img/heart.png",function()
+                            pet.hp = pet.hp + ddealt;
+                            done();
+                        end)
+                    end
+                end)
+            else
                 done();
-            end)
+            end
         end
         pet.abilityText = {
-            "Enemy gained ailment: Deal 4 damage to it and gain damage as HP. Works 2 times per battle.",
-            "Enemy gained ailment: Deal 8 damage to it and gain damage as HP. Works 2 times per battle.",
-            "Enemy gained ailment: Deal 12 damage to it and gain damage as HP. Works 2 times per battle."
+            "Enemy gained ailment: Deal 4 damage to it and gain damage as HP. Works twice per battle.",
+            "Enemy gained ailment: Deal 8 damage to it and gain damage as HP. Works twice per battle.",
+            "Enemy gained ailment: Deal 12 damage to it and gain damage as HP. Works twice per battle."
         };
         pet.abilities = ArrayFromRawArray({{id="opponentGainedAilment",func = pet.opponentGainedAilment}})
     elseif pet.id == "vampiresquid" then
@@ -1005,13 +1065,21 @@ giveAbilitiesToPet = function(pet,copying)
                     afflictedPets.push(tm);
                 end
             end);
+            local buffFuncs = Array();
             afflictedPets.forEach(function(ap) 
-                ap.atk = ap.atk + pet.level;
-                ap.hp = ap.hp + (2*pet.level);
-                ap.original.atk = ap.original.atk + pet.level;
-                ap.original.hp = ap.original.hp + (2*pet.level);
+                local apRef = ap; --idk if this is necessary with lua closures or not
+                local buff = function(next)
+                    game.manager.animateThrow(pet,apRef,"img/heartfulpunch.png",function()
+                        apRef.atk = apRef.atk + pet.level;
+                        apRef.hp = apRef.hp + (2*pet.level);
+                        apRef.original.atk = apRef.original.atk + pet.level;
+                        apRef.original.hp = apRef.original.hp + (2*pet.level);
+                        next();
+                    end)
+                end
+                buffFuncs.push(buff);
             end);
-            done();
+            asyn.runSerial(buffFuncs,done);
         end
         pet.abilityText = {
             "Start of battle: Permanently give 1 attack and 2 HP to each friend with a different ailment.",
@@ -1022,25 +1090,38 @@ giveAbilitiesToPet = function(pet,copying)
     elseif pet.id == "jolteon" then
         pet.friendFaints = function(done,friend)
             if pet.level == 1 then
-                local pb = PeanutButterPerk();
-                pet.gainPerk(pb);
+                game.manager.animateThrow(pet,pet,"img/perk/peanutbutter.png",function() 
+                    local pb = PeanutButterPerk();
+                    pet.gainPerk(pb);
+                    done();
+                end);
+            else
+                done();
             end
-            done();
         end
         pet.friendHurt = function(done,friend)
             if pet.level > 1 then
-                local pb = PeanutButterPerk();
-                pet.gainPerk(pb);
+                game.manager.animateThrow(pet,pet,"img/perk/peanutbutter.png",function() 
+                    local wasntpb = pet.perk.id ~= "peanutbutter";
+                    local pb = PeanutButterPerk();
+                    pet.gainPerk(pb);
+                    if (pet.level == 3) and wasntpb then
+                        game.manager.animateThrow(pet,pet,"img/heart.png",function() 
+                            pet.hp = pet.hp + 10;
+                            done();
+                        end);
+                    else
+                        done();
+                    end
+                end);
+            else
+                done();
             end
-            if pet.level == 3 then
-                pet.hp = pet.hp + 10;
-            end
-            done();
         end
         pet.abilityText = {
             "Friend faints: Gain Peanut Butter.",
             "Friend hurt: Gain Peanut Butter.",
-            "Friend hurt: Gain Peanut Butter and 10 HP."
+            "Friend hurt: Gain Peanut Butter, and 10 HP if it didn't have Peanut Butter beforehand."
         }
         pet.abilities = ArrayFromRawArray({{id="friendFaints",func = pet.friendFaints},{id="friendHurt",func = pet.friendHurt}})
     elseif pet.id == "zora" then
@@ -1073,13 +1154,23 @@ giveAbilitiesToPet = function(pet,copying)
                 pool = pool.concat(trixieTier3Ailments);
                 targets.push(pet.getXthOpponentAhead(4));
             end
-            targets.forEach(function(p) 
-                local randomAilmentFunc = pool[math.random(#pool)];
-                local ailment = randomAilmentFunc();
-                p.gainPerk(ailment);
+            
+            local ailFuncs = Array();
+            for i=1,#targets,1 do
+                local targ = targets[i];                
+                local ailFunc = function(next)
+                    local randomAilmentFunc = pool[math.random(#pool)];
+                    local ailment = randomAilmentFunc();
+                    game.manager.animateThrow(pet,targ,ailment.imgUrl,function()
+                        targ.gainPerk(ailment,next,true);
+                    end,0.4);
+                end
+                ailFuncs.push(ailFunc)
+            end
+            asyn.runSerial(ailFuncs,function()
+                game.manager.triggerRandom();
+                done();
             end);
-            game.manager.triggerRandom();
-            done();
         end
         pet.abilityText = {
             "Start of battle: Apply a Random tier 2 or lower ailment to the 2 nearest enemies and self.",

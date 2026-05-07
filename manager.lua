@@ -96,7 +96,9 @@ Manager = function()
     mng.triggerRandom = function()
         --interrupt/hijack current battle action to trigger random abilities
         if mng.battle then
-            mng.battle.triggerForAll("randomThingHappens",nil,nil,true);
+            mng.battle.triggerForAll("randomThingHappens",true,nil,true);
+        else
+            mng.triggerForAll("randomThingHappens",false,nil,true);
         end
     end
     mng.triggerGoldSpent = function(amount)
@@ -110,6 +112,21 @@ Manager = function()
             mng.triggerForTeam("spentGoldPastTen",amount,function()
                     mng.state = "SHOP";
             end);
+        end
+    end
+    mng.triggerForAll = function(triggerType,args,done,defer)
+        local all = game.team.getAllPets();
+        local actions = Array();
+        for i=#all,1,-1 do
+            local pet = all[i];
+            pet.allAbilities().forEach(function(el) 
+                if el.id == triggerType then
+                    game.abilityStack.registerAbilityTrigger(pet,triggerType,el.func,args);
+                end
+            end);
+        end
+        if not defer then
+            game.abilityStack.startProcessing(done);
         end
     end
     mng.animateThrow = function(source, target, projectileImgUrl, onHit,timeOverride)

@@ -190,6 +190,92 @@ FoodMap["betterapple"] = {
         food.eatTriggers(pet);
     end
 }
+FoodMap["salad"] = {
+    name = "Salad Bowl";
+    img = "img/food/salad.png";
+    tier = 3;
+    eat = function(pet,food)
+        game.manager.state = "ANIMATE";
+        local targets = Array();
+        local options = pet.getTeam().getAllPets();
+        local picked = options[math.random(#options)];
+        targets.push(picked);
+        local o2 = options.filter(function(el) return el ~= picked; end);
+        if #o2 > 0 then
+            targets.push(o2[math.random(#o2)]);
+        end
+        --targets should now be the conga line of relevant pets
+        local funcs = Array();
+        for i=1,#targets,1 do
+            local targ = targets[i];
+            local func = function(next)
+                game.manager.animateThrow(targ,targ,"img/heartfulpunch.png",function()
+                    targ.atk = targ.atk + 1;
+                    targ.hp = targ.hp + 1;
+                    food.eatTriggers(pet);
+                    next();
+                end,0.4)
+            end
+            funcs.push(func);
+        end
+        asyn.runSerial(funcs,function() 
+            game.manager.state = "SHOP";
+        end)
+    end
+}
+FoodMap["spellemup"] = {
+    name = "Spell 'em Up Soup";
+    img = "img/food/spellemup.png";
+    tier = 3;
+    eat = function(pet,food)
+        game.manager.state = "ANIMATE";
+        local targets = Array();
+        targets.push(pet);
+        local fits = true;
+        while fits do
+            fits = false;
+            local checking = targets[#targets];
+            if not checking then error("checking is... " .. #targets); end
+            local lastLetter = checking.name:sub(#(checking.name)):lower();
+            if lastLetter == "!" then lastLetter = "h"; end --cover for Weh!
+            local nextPetAhead = checking.getTeam().get(checking.getIndex() + 1);
+            if nextPetAhead then
+                local firstLetter = nextPetAhead.name:sub(1,1):lower();
+                if firstLetter == lastLetter then
+                    fits = true;
+                    targets.push(nextPetAhead);
+                end
+            end
+        end
+        --targets should now be the conga line of relevant pets
+        local funcs = Array();
+        for i=1,#targets,1 do
+            local targ = targets[i];
+            local func = function(next)
+                game.manager.animateThrow(targ,targ,"img/heartfulpunch.png",function()
+                    targ.atk = targ.atk + 1;
+                    targ.hp = targ.hp + 1;
+                    food.eatTriggers(pet);
+                    next();
+                end,0.4)
+            end
+            funcs.push(func);
+        end
+        asyn.runSerial(funcs,function() 
+            game.manager.state = "SHOP";
+        end)
+    end
+}
+FoodMap["oftheday"] = {
+    name = "Soup of the Day";
+    img = "img/food/oftheday.png";
+    tier = 4;
+    eat = function(pet,food)
+        local sotd = SoupOfTheDayPerk();
+        pet.gainPerk(sotd);
+        food.eatTriggers(pet);
+    end
+}
 FoodMap["grapes"] = {
     name = "Grapes";
     img = "img/food/grapes.png";
@@ -217,6 +303,17 @@ FoodMap["chocolate"] = {
     eat = function(pet,food)
         pet.addExp(1);
         food.eatTriggers(pet);
+    end
+}
+FoodMap["cocoasoup"] = {
+    name = "Cocoa Soup";
+    img = "img/food/cocoasoup.png";
+    tier = 5;
+    eat = function(pet,food)
+        local options = pet.getTeam().getAllPets();
+        local picked = options[math.random(#options)];
+        picked.addExp(1);
+        food.eatTriggers(picked);
     end
 }
 FoodMap["hotdog"] = {

@@ -1,7 +1,8 @@
 Perk = function(id)
     local perk = {};
     perk.id = id or "default";
-    perk.img = love.graphics.newImage("img/perk/" .. perk.id .. ".png");
+    perk.imgUrl = "img/perk/" .. perk.id .. ".png";
+    perk.img = love.graphics.newImage(perk.imgUrl);
     perk.abilities = Array();
     perk.damageMod = 0;
     perk.isAilment = false;
@@ -120,6 +121,23 @@ GrapesPerk = function()
     grapes.copy = function() return GrapesPerk(); end
     grapes.effectText = "Start of turn: Gain 1 gold.";
     return grapes;
+end
+SoupOfTheDayPerk = function()
+    local sotd = Perk("oftheday");
+    sotd.name = "Soup of the Day";
+    sotd.randomThingHappens = function(done,inbattle)
+        game.manager.animateThrow(sotd.owner,sotd.owner,"img/punch.png",function()
+            if inbattle then
+                sotd.owner.atk = sotd.owner.atk + 1;
+            else
+                sotd.owner.tempAtk = sotd.owner.tempAtk + 1;
+            end
+            done();
+        end);
+    end
+    sotd.abilities.push({id="randomThingHappens",func=sotd.randomThingHappens});
+    sotd.copy = function() return SoupOfTheDayPerk(); end
+    return sotd;
 end
 --------ailments
 ToastyAilment = function()

@@ -1,3 +1,4 @@
+math.randomseed(love.timer.getTime());
 screenwidth,screenheight=love.window.getDesktopDimensions();
 gamewidth=1100;
 gameheight=580;

@@ -127,7 +127,7 @@ Pet = function(id)
                 end);
             end);
             local enemies = pet.getEnemyTeam().getAllPets();
-            if game.manager.state == "BATTLE" then
+            if game.manager.battle then
                 enemies.forEach(function(en) 
                     en.allAbilities().forEach(function(el) 
                         if el.id == "opponentGainedAilment" then
