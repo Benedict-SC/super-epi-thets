@@ -149,6 +149,15 @@ Manager = function()
             projectile.y = origin.y + (dy * percent) - (4 * arcHeight * percent * (1 - percent));
         end,function() 
             mng.extras.removeElement(projectile);
+            local between = mng.getPetsBetween(source,target);
+            for i=1,#between,1 do
+                local pet = between[i];
+                pet.allAbilities().forEach(function(el) 
+                    if el.id == "somethingFlewOverhead" then
+                        game.abilityStack.registerAbilityTrigger(pet,"somethingFlewOverhead",el.func,args);
+                    end
+                end);
+            end
             onHit();
             if game.manager.battle then
                 game.manager.state = "BATTLE";
@@ -156,6 +165,53 @@ Manager = function()
                 game.manager.state = "SHOP";
             end
         end);
+    end
+    mng.getPetsBetween = function(source,target)
+        local tween = Array();
+        if source == target then return tween; end
+        local pos = source.getIndex();
+        local tpos = target.getIndex();
+        local isFriend = (source.enemy == target.enemy);
+        if isFriend then
+            if tpos > pos then
+                for i=pos+1,tpos,1 do
+                    local there = source.getTeam().get(i);
+                    if there and (there ~= target) then
+                        tween.push(there)
+                    end
+                    if there == target then 
+                        break; 
+                    end
+                end
+            else 
+                for i=pos-1,tpos,-1 do
+                    local there = source.getTeam().get(i);
+                    if there and (there ~= target) then
+                        tween.push(there)
+                    end
+                    if there == target then 
+                        break; 
+                    end
+                end
+            end
+        else
+            for i=pos+1,5,1 do
+                local there = source.getTeam().get(i);
+                if there then
+                    tween.push(there)
+                end
+            end
+            for i=5,tpos,-1 do
+                local there = target.getTeam().get(i);
+                if there and (there ~= target) then
+                    tween.push(there)
+                end
+                if there == target then 
+                    break; 
+                end
+            end
+        end
+        return tween;
     end
     mng.flushStack = function()
         if (#game.abilityStack.stack > 0) and not game.abilityStack.callbackSet then

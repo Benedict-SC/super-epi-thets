@@ -12,13 +12,13 @@ Game = function()
     local mem1 = game.team.get(1);
     mem1.perk = Quag();
     mem1.perk.owner = mem1;
-    game.team.addNewPet("flamethrower");
+    game.team.addNewPet("trefor");
     local mem2 = game.team.get(1);
     mem2.perk = CursedAilment();
     mem2.perk.owner = mem2;
     game.team.get(1).addExp(2);
-    --game.team.get(1).addExp(3);
-    game.team.addNewPet("trixie");
+    game.team.get(1).addExp(3);
+    game.team.addNewPet("skywatcher");
     game.team.get(1).addExp(2);
     game.team.get(1).addExp(3);
     game.team.addNewPet("gorou");

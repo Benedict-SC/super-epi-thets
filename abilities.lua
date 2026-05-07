@@ -261,9 +261,11 @@ giveAbilitiesToPet = function(pet,copying)
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "skywatcher" then
         pet.somethingFlewOverhead = function(done)
-            pet.atk = pet.atk + pet.level;
-            pet.hp = pet.hp + pet.level;
-            done();
+            game.manager.animateThrow(pet,pet,"img/heartfulpunch.png",function() 
+                pet.atk = pet.atk + pet.level;
+                pet.hp = pet.hp + pet.level;
+                done();
+            end)
         end
         pet.abilityText = {
             "Something flew overhead: Gain 1 attack and HP.",
@@ -433,18 +435,21 @@ giveAbilitiesToPet = function(pet,copying)
                 end
             end
             local fragFuncs = Array();
+            local finishFrags = function()
+                game.abilityStack.startProcessing(done);
+            end
             for i=1,#targets,1 do
                 local targ = targets[i];
                 local frag = FragileAilment();
                 
                 local fragFunc = function(next)
                     game.manager.animateThrow(pet,targ,nil,function()
-                        targ.gainPerk(frag,next);
+                        targ.gainPerk(frag,next,true);
                     end,0.4);
                 end
                 fragFuncs.push(fragFunc)
             end
-            asyn.runSerial(fragFuncs,done);
+            asyn.runSerial(fragFuncs,finishFrags);
         end
         pet.abilityText = {
             "Hurt: Apply Fragile to self and first enemy ahead.",
@@ -474,16 +479,18 @@ giveAbilitiesToPet = function(pet,copying)
                 if target.id == "trixie" then
                     game.manager.battle.dealDirectDamage(0,pet,target,function()
                         game.manager.battle.dealDirectDamage(dmg,target,pet,function()
-                            pet.gainPerk(CursedAilment());
-                            game.manager.triggerRandom();
-                            done();
+                            pet.gainPerk(CursedAilment(),function()
+                                game.manager.triggerRandom();
+                                done();
+                            end);
                         end)
                     end)
                 else
                     game.manager.battle.dealDirectDamage(dmg,pet,target,function()
-                        target.gainPerk(CursedAilment());
-                        game.manager.triggerRandom();
-                        done();
+                        target.gainPerk(CursedAilment(),function()
+                            game.manager.triggerRandom();
+                            done();
+                        end);
                     end)
                 end
             end
@@ -702,18 +709,21 @@ giveAbilitiesToPet = function(pet,copying)
                 end)
             end
             local quagFuncs = Array();
+            local finishQuags = function()
+                game.abilityStack.startProcessing(done);
+            end
             for i=1,#targets,1 do
                 local targ = targets[i];
                 local quag = Quag();
                 
                 local quagFunc = function(next)
                     game.manager.animateThrow(pet,targ,"img/perk/quag.png",function()
-                        targ.gainPerk(quag,next);
+                        targ.gainPerk(quag,next,true);
                     end,0.3);
                 end
                 quagFuncs.push(quagFunc)
             end
-            asyn.runSerial(quagFuncs,done);
+            asyn.runSerial(quagFuncs,finishQuags);
         end
         pet.abilityText = {
             "Start of battle: Gain Quag. (Quag is both a perk and an ailment.)",
@@ -1169,7 +1179,7 @@ giveAbilitiesToPet = function(pet,copying)
             end
             asyn.runSerial(ailFuncs,function()
                 game.manager.triggerRandom();
-                done();
+                game.abilityStack.startProcessing(done);
             end);
         end
         pet.abilityText = {
@@ -1210,8 +1220,9 @@ giveAbilitiesToPet = function(pet,copying)
                     pet.hp = highest.hp;
                 end
             end
-            pet.gainPerk(ExtremelySpookedAilment());
-            done();
+            game.manager.animateThrow(pet,pet,"img/perk/extremelyspooked.png",function()
+                pet.gainPerk(ExtremelySpookedAilment(),done);
+            end)
         end
         pet.abilityText = {
             "Before battle: Transform into the highest-tier friend and gain Extremely Spooked.",

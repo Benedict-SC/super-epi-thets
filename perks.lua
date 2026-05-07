@@ -146,9 +146,10 @@ ToastyAilment = function()
     toast.isAilment = true;
     toast.anyoneAttacked = function(done)
         toast.owner.hp = toast.owner.hp - 1;
-        toast.owner.triggerOne("hurt",{source=nil,dmg=1});
-        toast.owner.losePerk();
-        done();
+        toast.owner.triggerOne("hurt",{source=nil,dmg=1},function()
+            toast.owner.losePerk();
+            done();
+        end);
     end
     toast.abilities.push({id="anyoneAttacked",func=toast.anyoneAttacked})
     toast.copy = function() return ToastyAilment(); end
@@ -178,9 +179,10 @@ CursedAilment = function()
         team.removeElement(cursed.owner);
         if #team > 0 then
             local randomTeammate = team[math.random(#team)];
-            randomTeammate.gainPerk(CursedAilment());
-            game.manager.triggerRandom();
-            done();
+            randomTeammate.gainPerk(CursedAilment(),function()
+                game.manager.triggerRandom();
+                done();
+            end);
         else
             done();
         end
