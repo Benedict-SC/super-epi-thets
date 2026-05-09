@@ -137,7 +137,33 @@ SoupOfTheDayPerk = function()
     end
     sotd.abilities.push({id="randomThingHappens",func=sotd.randomThingHappens});
     sotd.copy = function() return SoupOfTheDayPerk(); end
+    sotd.effectText = "Something Random happens: Gain 1 attack and HP until next turn.";
     return sotd;
+end
+LavAcidPerk = function()
+    local lav = Perk("lavacid");
+    lav.name = "Lav-acid";
+    lav.afterAttack = function(done,opponent)
+        game.manager.triggerRandom();
+        done();
+    end
+    lav.abilities.push({id="afterAttack",func=lav.afterAttack});
+    lav.copy = function() return LavAcidPerk(); end
+    lav.effectText = "Randomly deals 13x damage (1/13 chance)";
+    return lav;
+end
+AmbrosiaPerk = function()
+    local amb = Perk("ambrosia");
+    amb.name = "Ambrosia";
+    amb.defDown = -8;
+    amb.afterAttack = function(done,opponent)
+        amb.owner.losePerk();
+        done();
+    end
+    amb.abilities.push({id="afterAttack",func=amb.afterAttack});
+    amb.copy = function() return AmbrosiaPerk(); end
+    amb.effectText = "Block ailment or 8 damage, once."
+    return amb;
 end
 --------ailments
 ToastyAilment = function()

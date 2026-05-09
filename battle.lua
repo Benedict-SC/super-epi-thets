@@ -171,8 +171,18 @@ Battle = function(friendly,enemy)
             frontFriendly.x = dist*percent;
             frontEnemy.x = -1*dist*percent;
         end,function() 
-            local fdmg = frontFriendly.atk + frontFriendly.perk.damageMod - frontEnemy.defense(); --modify this by defense-related perks
-            local edmg = frontEnemy.atk + frontEnemy.perk.damageMod - frontFriendly.defense(); --ditto
+            local fdmg = frontFriendly.atk + frontFriendly.perk.damageMod;
+            if frontFriendly.perk.id == "lavacid" then
+                local crit = math.random(13) == 13;
+                if crit then fdmg = fdmg * 13; end
+            end
+            fdmg = fdmg - frontEnemy.defense(); 
+            local edmg = frontEnemy.atk + frontEnemy.perk.damageMod;
+            if frontEnemy.perk.id == "lavacid" then
+                local crit = math.random(13) == 13;
+                if crit then edmg = edmg * 13; end
+            end
+            edmg = edmg - frontFriendly.defense(); 
             if fdmg < 0 then fdmg = 0; end
             if edmg < 0 then edmg = 0; end
             frontFriendly.hp = frontFriendly.hp - edmg;
@@ -250,7 +260,7 @@ Battle = function(friendly,enemy)
                     target.hp = 1;
                 end
                 target.losePerk();
-            elseif (target.perk.id == "melon" or target.perk.id == "coconut") and (not target.isMollywhopped()) then
+            elseif ((target.perk.id == "melon") or (target.perk.id == "coconut") or (target.perk.id == "ambrosia")) and (not target.isMollywhopped()) then
                 target.losePerk();
             end
             if totalDamage == 0 then

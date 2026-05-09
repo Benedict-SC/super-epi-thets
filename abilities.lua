@@ -1,4 +1,4 @@
-giveAbilitiesToPet = function(pet,copying)
+giveAbilitiesToPet = function(pet)
     pet.startOfTurn = function(done) done(); end
     pet.endOfTurn = function(done) done(); end
     pet.summoned = function(done) done(); end
@@ -85,14 +85,14 @@ giveAbilitiesToPet = function(pet,copying)
         pet.startOfTurn = function(done)
             local types1 = ArrayFromRawArray({"waterysoup","toohot"});
             local types2 = ArrayFromRawArray({"spellemup","oftheday"});
-            --local types3 = ArrayFromRawArray({"cocoasoup","lavacid"});
+            local types3 = ArrayFromRawArray({"cocoasoup","lavacid"});
             local types = types1;
             if pet.level > 1 then
                 types = types.concat(types2);
             end
-            --[[if pet.level > 2 then
+            if pet.level > 2 then
                 types = types.concat(types3);
-            end]]--
+            end
             local soupType = types[math.random(#types)];
 
             asyn.wait(0.2,function() 
@@ -467,7 +467,7 @@ giveAbilitiesToPet = function(pet,copying)
                 return el.gender == "f";
             end);
             local towers = oppTeam.filter(function(el) 
-                return el.id == "wizardtower";
+                return (el.id == "wizardtower") or el.copyingTower;
             end);
             if #towers > 0 then
                 oppTeam = towers;
@@ -607,7 +607,7 @@ giveAbilitiesToPet = function(pet,copying)
         pet.startOfBattle = function(done)
             local targets = game.manager.battle.allPets();
             local towers = targets.filter(function(el) 
-                return (el.id == "wizardtower") and (el.enemy ~= pet.enemy);
+                return ((el.id == "wizardtower") or el.copyingTower) and (el.enemy ~= pet.enemy);
             end);
             if #towers > 0 then
                 targets = towers;
@@ -869,7 +869,7 @@ giveAbilitiesToPet = function(pet,copying)
             local oppTeam = pet.getEnemyTeam();
             oppTeam = oppTeam.getAllPets();
             local towers = oppTeam.filter(function(el) 
-                return el.id == "wizardtower";
+                return (el.id == "wizardtower") or el.copyingTower;
             end);
             if #towers > 0 then
                 oppTeam = towers;
@@ -1264,7 +1264,7 @@ giveAbilitiesToPet = function(pet,copying)
             pet.oldDefense = pet.defense;
         end
         pet.defense = function()
-            if pet.getIndex() ~= 5 then
+            if (pet.getIndex() ~= 5) and not ((pet.id == "rick") and (not pet.copyingLorelai)) then
                 return pet.oldDefense() + (10*pet.level);
             else 
                 return pet.oldDefense();
@@ -1274,6 +1274,47 @@ giveAbilitiesToPet = function(pet,copying)
             "If not in front: Takes 10 less damage and can't gain ailments.",
             "If not in front: Takes 20 less damage and can't gain ailments.",
             "If not in front: Takes 30 less damage and can't gain ailments."
+        }
+    elseif pet.id == "rick" then
+        pet.allAbilities = function()
+            local finalStack = Array();
+            pet.copyingMolly = false;
+            pet.copyingTower = false;
+            pet.copyingLorelai = false;
+            local teammates = pet.getTeammates();
+            for i=1,#teammates,1 do
+                local friend = teammates[i];
+                    if friend.id ~= "rick" then
+                    pet.id = friend.id;
+                    giveAbilitiesToPet(pet);
+                    finalStack = finalStack.concat(pet.abilities);
+                    --handle special-case hard-coded pet abilities
+                    if friend.id == "molly" then
+                        pet.copyingMolly = true;
+                    end
+                    if friend.id == "wizardtower" then
+                        pet.copyingTower = true;
+                    end
+                    if friend.id == "lorelai" then
+                        pet.copyingLorelai = true;
+                    end
+                end
+            end
+            pet.id = "rick";
+            pet.abilityText = {
+                "Has all abilities of all friends at level 1.",
+                "Has all abilities of all friends at level 2.",
+                "Has all abilities of all friends at level 3.",
+            }
+            if pet.isMollywhopped() then
+                return finalStack.concat(Array());
+            end
+            return finalStack.concat(pet.perk.abilities);
+        end
+        pet.abilityText = {
+            "Has all abilities of all friends at level 1.",
+            "Has all abilities of all friends at level 2.",
+            "Has all abilities of all friends at level 3.",
         }
     elseif pet.id == "craig" then
         pet.abilityText = {

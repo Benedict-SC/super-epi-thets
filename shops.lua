@@ -6,17 +6,17 @@ PetShop = function()
     shop.roll = function(tier)
         local frozen = shop.getFrozenPets();
         local slotsLeftOver = game.run.shopSlots - #frozen;
-        if slotsLeftOver >= 1 then
-            shop.contents = Array();
-            shop.contents = shop.contents.concat(frozen);
-            shop.contents.forEach(function(x) 
-                if x.linkedPet then
-                    if not shop.contents.contains(x.linkedPet) then
-                        x.linkedPet = nil;
-                        x.linkDraw = false;
-                    end
+        shop.contents = Array();
+        shop.contents = shop.contents.concat(frozen);
+        shop.contents.forEach(function(x) 
+            if x.linkedPet then
+                if not shop.contents.contains(x.linkedPet) then
+                    x.linkedPet = nil;
+                    x.linkDraw = false;
                 end
-            end);
+            end
+        end);
+        if slotsLeftOver >= 1 then
             for i=1,slotsLeftOver,1 do
                 local pickedTier = math.random(tier);
                 local idsAvailable = PetTiers[pickedTier];
@@ -61,6 +61,14 @@ PetShop = function()
             shop.contents.removeElement(pet.linkedPet);
             pet.linkedPet = nil;
         end
+        local triggers = game.team.getAllPets();
+        triggers.forEach(function(pet) 
+            pet.allAbilities().forEach(function(el) 
+                if el.id == "boughtPet" then
+                    game.abilityStack.registerAbilityTrigger(pet,"boughtPet",el.func,food);
+                end
+            end);
+        end);
     end
     shop.stock = function(id)
         shop.contents.push(Pet(id));
@@ -112,20 +120,23 @@ end
 ItemShop = function()
     local shop = {};
     shop.contents = Array();
-    shop.x = 780;
-    shop.y = 430;
+    shop.x = 600;
+    shop.y = 350;
     shop.roll = function(tier)
         local frozen = shop.getFrozenFood();
         local slotsLeftOver = game.run.itemSlots - #frozen;
+        shop.contents = Array();
+        shop.contents = shop.contents.concat(frozen);
         if slotsLeftOver >= 1 then
-            shop.contents = Array();
-            shop.contents = shop.contents.concat(frozen);
             for i=1,slotsLeftOver,1 do
                 local pickedTier = math.random(tier);
                 if pickedTier ~= 6 then
                     local idsAvailable = FoodTiers[pickedTier];
                     local foodId = idsAvailable[math.random(#idsAvailable)];
                     local food = Food(foodId);
+                    if foodId == "sleepingpill" then
+                        food.discount = 3;
+                    end
                     shop.contents.push(food);
                 else
                     local isGraham = math.random(4) == 1;
@@ -169,7 +180,11 @@ ItemShop = function()
         end);
     end
     shop.stock = function(id,highlight)
-        shop.contents.push(Food(id));
+        local food = Food(id);
+        if id == "sleepingpill" then
+            food.discount = 3;
+        end
+        shop.contents.push(food);
         if highlight then
             shop.highlightLast();
         end
@@ -196,6 +211,9 @@ ItemShop = function()
             local foodId = idsAvailable[math.random(#idsAvailable)];
             local food = Food(foodId);
             food.discount = discount;
+            if foodId == "sleepingpill" then
+                food.discount = 3;
+            end
             shop.contents.push(food);
             shop.highlightLast();
         else

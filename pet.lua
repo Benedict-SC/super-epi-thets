@@ -37,6 +37,12 @@ Pet = function(id)
         return amt;
     end
 
+    pet.allAbilities = function()
+        if pet.isMollywhopped() then
+            return pet.abilities.concat(Array());
+        end
+        return pet.abilities.concat(pet.perk.abilities);
+    end
     giveAbilitiesToPet(pet);
 
     pet.getSellPrice = function()
@@ -109,7 +115,14 @@ Pet = function(id)
             if done then done(); end
             return;
         end
-        pet.losePerk();
+        
+        if perk.isAilment and (pet.perk.id == "ambrosia") then
+            pet.losePerk();
+            done();
+            return;
+        else
+            pet.losePerk();
+        end
         pet.perk = perk;
         pet.perk.owner = pet;
         if perk.isAilment then
@@ -162,12 +175,6 @@ Pet = function(id)
         newPet.perk.owner = newPet;
         newPet.original = pet;
         return newPet;
-    end
-    pet.allAbilities = function()
-        if pet.isMollywhopped() then
-            return pet.abilities.concat(Array());
-        end
-        return pet.abilities.concat(pet.perk.abilities);
     end
     pet.triggerOne = function(triggerType,args,done,defer)
         pet.allAbilities().forEach(function(el) 
@@ -261,7 +268,7 @@ Pet = function(id)
         if pet.linkedPet and pet.linkDraw then
             love.graphics.draw(petlink,xoff+pet.x+68,yoff+pet.y+118);
         end
-        if pet.id == "molly" and not pet.fromShop then
+        if ((pet.id == "molly") or pet.copyingMolly) and not pet.fromShop then
             love.graphics.setColor(0.17,0.8,0.49,0.29);
             love.graphics.ellipse(  "fill",
                                     xoff+ ((xscale == -1) and 100 or 0) + pet.x + 50,
@@ -482,6 +489,7 @@ Pet = function(id)
         return nil;
     end
     pet.getTeammates = function()
+        if pet.fromShop then return Array(); end
         local team = pet.getTeam();
         team = team.getAllPets();
         return team.filter(function(el)
@@ -497,11 +505,11 @@ Pet = function(id)
     end
     pet.isMollywhopped = function()
         local pos = pet.getIndex();
-        if pet.id == "molly" then return true; end
+        if (pet.id == "molly") or pet.copyingMolly then return true; end
         --check friendlies
         local teammates = pet.getTeammates();
         local mollies = teammates.filter(function(el) 
-            return el.id == "molly";
+            return (el.id == "molly") or el.copyingMolly;
         end);
         for i=1,#mollies,1 do
             local mol = mollies[i]
@@ -514,7 +522,7 @@ Pet = function(id)
             local enemies = pet.getEnemyTeam().getAllPets();
             local relativePos = 5+(6-pos);
             local badmollies = enemies.filter(function(el) 
-                return el.id == "molly";
+                return (el.id == "molly") or el.copyingMolly;
             end);
             for i=1,#badmollies,1 do
                 local mol = badmollies[i]
@@ -541,6 +549,7 @@ end
 
 PetMap = {};
 PetMap["crapgorps"] = {
+    id="crapgorps";
     name = "Crap Gorps";
     atk = 1;
     hp = 3;
@@ -549,6 +558,7 @@ PetMap["crapgorps"] = {
     gender = "m";
 }
 PetMap["gansley"] = {
+    id="gansley";
     name = "Dan Gansley";
     atk = 1;
     hp = 1;
@@ -557,6 +567,7 @@ PetMap["gansley"] = {
     gender = "m";
 }
 PetMap["ben"] = {
+    id="ben";
     name = "Ben";
     atk = 3;
     hp = 2;
@@ -565,6 +576,7 @@ PetMap["ben"] = {
     gender = "m";
 }
 PetMap["flamethrower"] = {
+    id="flamethrower";
     name = "Flamethrower";
     atk = 2;
     hp = 2;
@@ -573,6 +585,7 @@ PetMap["flamethrower"] = {
     gender = "m";
 }
 PetMap["wellwatcher"] = {
+    id="wellwatcher";
     name = "Well Watcher";
     atk = 3;
     hp = 3;
@@ -581,6 +594,7 @@ PetMap["wellwatcher"] = {
     gender = "m";
 }
 PetMap["skywatcher"] = {
+    id="skywatcher";
     name = "Sky Watcher";
     atk = 2;
     hp = 2;
@@ -590,6 +604,7 @@ PetMap["skywatcher"] = {
     gender = "m";
 }
 PetMap["workerbee"] = {
+    id="workerbee";
     name = "Worker Bee";
     atk = 1;
     hp = 1;
@@ -599,6 +614,7 @@ PetMap["workerbee"] = {
     gender = "m";
 }
 PetMap["martin"] = {
+    id="martin";
     name = "Martin";
     atk = 1;
     hp = 2;
@@ -607,6 +623,7 @@ PetMap["martin"] = {
     gender = "m";
 }
 PetMap["gorou"] = {
+    id="gorou";
     name = "Gorou";
     atk = 2;
     hp = 3;
@@ -615,6 +632,7 @@ PetMap["gorou"] = {
     gender = "m";
 }
 PetMap["giovanni"] = {
+    id="giovanni";
     name = "Giovanni";
     atk = 3;
     hp = 2;
@@ -623,6 +641,7 @@ PetMap["giovanni"] = {
     gender = "m";
 }
 PetMap["molly"] = {
+    id="molly";
     name = "Molly";
     atk = 2;
     hp = 4;
@@ -631,6 +650,7 @@ PetMap["molly"] = {
     gender = "f";
 }
 PetMap["simphony"] = {
+    id="simphony";
     name = "Simphony";
     atk = 3;
     hp = 1;
@@ -639,6 +659,7 @@ PetMap["simphony"] = {
     gender = "f";
 }
 PetMap["bugsy"] = {
+    id="bugsy";
     name = "Bugsy";
     atk = 1;
     hp = 5;
@@ -647,6 +668,7 @@ PetMap["bugsy"] = {
     gender = "m";
 }
 PetMap["spike"] = {
+    id="spike";
     name = "Spike";
     atk = 4;
     hp = 2;
@@ -655,6 +677,7 @@ PetMap["spike"] = {
     gender = "f";
 }
 PetMap["feenie"] = {
+    id="feenie";
     name = "Phoenica";
     atk = 1;
     hp = 3;
@@ -663,6 +686,7 @@ PetMap["feenie"] = {
     gender = "f";
 }
 PetMap["gacha"] = {
+    id="gacha";
     name = "Gacha";
     atk = 3;
     hp = 3;
@@ -671,6 +695,7 @@ PetMap["gacha"] = {
     gender = "f";
 }
 PetMap["darkstar"] = {
+    id="darkstar";
     name = "Darkstar";
     atk = 4;
     hp = 1;
@@ -679,6 +704,7 @@ PetMap["darkstar"] = {
     gender = "m";
 }
 PetMap["crusher"] = {
+    id="crusher";
     name = "Crusher";
     atk = 2;
     hp = 2;
@@ -687,6 +713,7 @@ PetMap["crusher"] = {
     gender = "m";
 }
 PetMap["mera"] = {
+    id="mera";
     name = "Mera";
     atk = 3;
     hp = 4;
@@ -695,6 +722,7 @@ PetMap["mera"] = {
     gender = "f";
 }
 PetMap["stink"] = {
+    id="stink";
     name = "Stink";
     atk = 2;
     hp = 2;
@@ -703,6 +731,7 @@ PetMap["stink"] = {
     gender = "m";
 }
 PetMap["poochy"] = {
+    id="poochy";
     name = "Poochy";
     atk = 1;
     hp = 5;
@@ -711,6 +740,7 @@ PetMap["poochy"] = {
     gender = "f";
 }
 PetMap["craig"] = {
+    id="craig";
     name = "CRAIG";
     atk = 1;
     hp = 1;
@@ -720,6 +750,7 @@ PetMap["craig"] = {
     gender = "m";
 }
 PetMap["naven"] = {
+    id="naven";
     name = "Naven";
     atk = 2;
     hp = 2;
@@ -728,6 +759,7 @@ PetMap["naven"] = {
     gender = "m";
 }
 PetMap["umby"] = {
+    id="umby";
     name = "Umbreon";
     atk = 4;
     hp = 5;
@@ -736,6 +768,7 @@ PetMap["umby"] = {
     gender = "m";
 }
 PetMap["espy"] = {
+    id="espy";
     name = "Espeon";
     atk = 3;
     hp = 4;
@@ -744,6 +777,7 @@ PetMap["espy"] = {
     gender = "m";
 }
 PetMap["sylvie"] = {
+    id="sylvie";
     name = "Sylvie";
     atk = 3;
     hp = 1;
@@ -752,6 +786,7 @@ PetMap["sylvie"] = {
     gender = "m";
 }
 PetMap["beefton"] = {
+    id="beefton";
     name = "DR. BEEFTON";
     atk = 1;
     hp = 1;
@@ -761,6 +796,7 @@ PetMap["beefton"] = {
     gender = "m";
 }
 PetMap["scaregrow"] = {
+    id="scaregrow";
     name = "Scaregrow";
     atk = 1;
     hp = 7;
@@ -769,6 +805,7 @@ PetMap["scaregrow"] = {
     gender = "m";
 }
 PetMap["howdy"] = {
+    id="howdy";
     name = "Howdy";
     atk = 5;
     hp = 3;
@@ -777,6 +814,7 @@ PetMap["howdy"] = {
     gender = "m";
 }
 PetMap["percy"] = {
+    id="percy";
     name = "Percy";
     atk = 4;
     hp = 4;
@@ -785,6 +823,7 @@ PetMap["percy"] = {
     gender = "f";
 }
 PetMap["wizardtower"] = {
+    id="wizardtower";
     name = "Wizard Tower";
     atk = 1;
     hp = 1;
@@ -794,6 +833,7 @@ PetMap["wizardtower"] = {
     gender = "f"; --for stink targeting purposes. protects percy.
 }
 PetMap["arnold"] = {
+    id="arnold";
     name = "Arnold";
     atk = 2;
     hp = 5;
@@ -802,6 +842,7 @@ PetMap["arnold"] = {
     gender = "m";
 }
 PetMap["ramsey"] = {
+    id="ramsey";
     name = "Ramsey";
     atk = 4;
     hp = 6;
@@ -810,6 +851,7 @@ PetMap["ramsey"] = {
     gender = "m";
 }
 PetMap["trefor"] = {
+    id="trefor";
     name = "Trefor";
     atk = 3;
     hp = 4;
@@ -818,6 +860,7 @@ PetMap["trefor"] = {
     gender = "f";
 }
 PetMap["carcrash"] = {
+    id="carcrash";
     name = "Car Crash";
     atk = 1;
     hp = 1;
@@ -826,6 +869,7 @@ PetMap["carcrash"] = {
     gender = "m";
 }
 PetMap["bus"] = {
+    id="bus";
     name = "Beat-up Bus";
     atk = 1;
     hp = 1;
@@ -835,6 +879,7 @@ PetMap["bus"] = {
     gender = "nb";
 }
 PetMap["spellingbee"] = {
+    id="spellingbee";
     name = "Spelling Bee";
     atk = 3;
     hp = 5;
@@ -843,6 +888,7 @@ PetMap["spellingbee"] = {
     gender = "m";
 }
 PetMap["indus"] = {
+    id="indus";
     name = "Indus";
     atk = 8;
     hp = 5;
@@ -851,6 +897,7 @@ PetMap["indus"] = {
     gender = "m";
 }
 PetMap["yoomtah"] = {
+    id="yoomtah";
     name = "Yoomtah";
     atk = 7;
     hp = 4;
@@ -859,6 +906,7 @@ PetMap["yoomtah"] = {
     gender = "f";
 }
 PetMap["weh"] = {
+    id="weh";
     name = "Weh!";
     atk = 5;
     hp = 7;
@@ -867,6 +915,7 @@ PetMap["weh"] = {
     gender = "f";
 }
 PetMap["howie"] = {
+    id="howie";
     name = "Howie";
     atk = 6;
     hp = 7;
@@ -875,6 +924,7 @@ PetMap["howie"] = {
     gender = "m";
 }
 PetMap["tannenbaum"] = {
+    id="tannenbaum";
     name = "Tannenbaum";
     atk = 10;
     hp = 6;
@@ -883,6 +933,7 @@ PetMap["tannenbaum"] = {
     gender = "m";
 }
 PetMap["exit"] = {
+    id="exit";
     name = "Exit";
     atk = 11;
     hp = 1;
@@ -891,6 +942,7 @@ PetMap["exit"] = {
     gender = "m";
 }
 PetMap["justy"] = {
+    id="justy";
     name = "Justy";
     atk = 5;
     hp = 5;
@@ -899,6 +951,7 @@ PetMap["justy"] = {
     gender = "m";
 }
 PetMap["jorge"] = {
+    id="jorge";
     name = "Jorge";
     atk = 3;
     hp = 3;
@@ -907,6 +960,7 @@ PetMap["jorge"] = {
     gender = "m";
 }
 PetMap["vampirebat"] = {
+    id="vampirebat";
     name = "Jorge (Batty)";
     atk = 3;
     hp = 3;
@@ -916,6 +970,7 @@ PetMap["vampirebat"] = {
     gender = "m";
 }
 PetMap["vampireparrot"] = {
+    id="vampireparrot";
     name = "Jorge (Squawking)";
     atk = 3;
     hp = 3;
@@ -925,6 +980,7 @@ PetMap["vampireparrot"] = {
     gender = "m";
 }
 PetMap["vampiresquid"] = {
+    id="vampiresquid";
     name = "Jorge (Wiggly)";
     atk = 3;
     hp = 3;
@@ -934,6 +990,7 @@ PetMap["vampiresquid"] = {
     gender = "m";
 }
 PetMap["jolteon"] = {
+    id="jolteon";
     name = "Jolteon";
     atk = 10;
     hp = 6;
@@ -942,6 +999,7 @@ PetMap["jolteon"] = {
     gender = "m";
 }
 PetMap["zora"] = {
+    id="zora";
     name = "Zora";
     atk = 3;
     hp = 13;
@@ -950,6 +1008,7 @@ PetMap["zora"] = {
     gender = "f";
 }
 PetMap["trixie"] = {
+    id="trixie";
     name = "Trixie";
     atk = 8;
     hp = 7;
@@ -958,6 +1017,7 @@ PetMap["trixie"] = {
     gender = "f"; --for Stink targeting purposes. they auto-parry the sword with nonbiney aegis.
 }
 PetMap["graham"] = {
+    id="graham";
     name = "Graham";
     atk = 12;
     hp = 10;
@@ -966,6 +1026,7 @@ PetMap["graham"] = {
     gender = "m";
 }
 PetMap["greenpikachu"] = {
+    id="greenpikachu";
     name = "Green Pikachu";
     atk = 3;
     hp = 11;
@@ -974,6 +1035,7 @@ PetMap["greenpikachu"] = {
     gender = "m";
 }
 PetMap["wound"] = {
+    id="wound";
     name = "Wound";
     atk = 4;
     hp = 4;
@@ -982,12 +1044,22 @@ PetMap["wound"] = {
     gender = "f"; --for Stink targeting. hits wownd, technically, even though woond is m
 }
 PetMap["lorelai"] = {
+    id="lorelai";
     name = "Lorelai";
     atk = 9;
     hp = 6;
     img = "img/char/lorelai.png";
     tier = 6;
     gender = "f"; 
+}
+PetMap["rick"] = {
+    id="rick";
+    name = "Rick";
+    atk = 1;
+    hp = 1;
+    img = "img/char/rick.png";
+    tier = 6;
+    gender = "m"; 
 }
 PetTiers = {Array(),Array(),Array(),Array(),Array(),Array()};
 for k,v in pairs(PetMap) do

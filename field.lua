@@ -18,14 +18,18 @@ Field = function()
         for i=1,5,1 do
             love.graphics.draw(field.pedestal,10 + ((i-1)*100),field.TEAM_HEIGHT);
         end
-        for i=1,5,1 do
-            love.graphics.draw(field.pedestal,560 + ((i-1)*100),field.TEAM_HEIGHT);
+        if game.manager.battle then
+            for i=1,5,1 do
+                love.graphics.draw(field.pedestal,560 + ((i-1)*100),field.TEAM_HEIGHT);
+            end
         end
         for i=1,game.run.shopSlots,1 do
             love.graphics.draw(field.pedestal,80 + ((i-1)*100),field.TEAM_HEIGHT + 200);
         end
-        for i=1,game.run.itemSlots,1 do
-            love.graphics.draw(field.pedestal,780 + ((i-1)*100),field.TEAM_HEIGHT + 200);
+        if not game.manager.battle then
+            for i=1,game.run.itemSlots,1 do
+                love.graphics.draw(field.pedestal,600 + ((i-1)*100),field.TEAM_HEIGHT + 120);
+            end
         end
     end
     

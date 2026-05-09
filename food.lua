@@ -180,6 +180,36 @@ FoodMap["toohot"] = {
         food.eatTriggers(pet);
     end;
 }
+FoodMap["sleepingpill"] = {
+    name = "Sleeping Pill";
+    img = "img/food/sleepingpill.png";
+    tier = 2;
+    eat = function(pet,food)
+        food.eatTriggers(pet);
+        pet.fainted = true;
+        game.manager.state = "ANIMATE";
+        asyn.wait(0.4,function()
+                local fainter = pet;
+                fainter.allAbilities().forEach(function(el)
+                    if el.id == "faint" then
+                        game.abilityStack.registerAbilityTrigger(fainter,"faint",el.func);
+                    end
+                end);
+                local teammates = fainter.getTeammates();
+                teammates.forEach(function(tm) 
+                    tm.allAbilities().forEach(function(el) 
+                        if el.id == "friendFaints" then
+                            game.abilityStack.registerAbilityTrigger(tm,"friendFaints",el.func,fainter);
+                        end
+                    end);
+                end);
+                game.abilityStack.startProcessing(function()
+                    game.team.removePet(pet);
+                    game.manager.state = "SHOP";
+                end)
+        end);
+    end;
+}
 FoodMap["betterapple"] = {
     name = "Better Apple";
     img = "img/food/betterapple.png";
@@ -276,6 +306,16 @@ FoodMap["oftheday"] = {
         food.eatTriggers(pet);
     end
 }
+FoodMap["ambrosia"] = {
+    name = "Ambrosia";
+    img = "img/food/ambrosia.png";
+    tier = 4;
+    eat = function(pet,food)
+        local amb = AmbrosiaPerk();
+        pet.gainPerk(amb);
+        food.eatTriggers(pet);
+    end
+}
 FoodMap["grapes"] = {
     name = "Grapes";
     img = "img/food/grapes.png";
@@ -337,6 +377,29 @@ FoodMap["hotdog"] = {
             randomPet2.atk = randomPet2.atk + 4;
             food.eatTriggers(randomPet2);
         end
+    end
+}
+FoodMap["lavacid"] = {
+    name = "Lav-acid";
+    img = "img/food/lavacid.png";
+    tier = 6;
+    eat = function(pet,food)
+        local la = LavAcidPerk();
+        pet.gainPerk(la);
+        food.eatTriggers(pet);
+    end
+}
+FoodMap["konpeito"] = {
+    name = "Konpeito";
+    img = "img/food/konpeito.png";
+    tier = 6;
+    eat = function(pet,food)
+        local tier = pet.tier + 1;
+        if tier > 6 then tier = 6; end
+        local options = PetTiers[tier].filter(function(el) return el.name ~= pet.name; end);
+        local id = options[math.random(#options)];
+        pet.transform(id);
+        food.eatTriggers(pet);
     end
 }
 FoodTiers = {Array(),Array(),Array(),Array(),Array(),Array()};
