@@ -192,6 +192,16 @@ Array = function(...)
 		end);
 		return nArr;
 	end
+	arr.map = function(func)
+		local nArr = Array();
+		arr.forEach(function(el) 
+			nArr.push(func(el));
+		end);
+		return nArr;
+	end
+	arr.copy = function()
+		return arr.concat(Array());
+	end
     arr.concat = function(arr2)
         local nArr = Array();
         for i=1,#arr,1 do
@@ -242,4 +252,8 @@ printInColor = function(str,x,y,r,g,b,a)
 	love.graphics.print(str,x,y);
 	love.graphics.setShader();
 	popColor();
+end
+
+splitStringsForWidth = function(str,widthInPixels)
+	--TODO: Take str and return an array of strings such that each string, if drawn using the current font, will fit within widthInPixels. (This is for use in drawing long strings in small display elements that will need to Break lines on spaces, so individual words aren't cut off and continued on the subsequent line.
 end

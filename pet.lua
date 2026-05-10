@@ -60,7 +60,8 @@ Pet = function(id)
                 pet.perk = otherPet.perk;
                 pet.perk.owner = pet;
             end
-            pet.addExp(1);
+            local xpamount = (otherPet.xp > 0) and 2 or 1;
+            pet.addExp(xpamount);
         end
     end
     pet.addExp = function(amt)
@@ -83,7 +84,7 @@ Pet = function(id)
             pet.level = 3;
             return;
         end
-        if game and not game.manager.battle then
+        if game and (not game.manager.battle) and (not pet.enemy) then
             game.petShop.levelUpBonusStock();
         end
     end
@@ -311,22 +312,19 @@ Pet = function(id)
 
         popColor();
     end
-    pet.onMouseDown = function()
+    pet.dragKind = "pet";
+    pet.canDrag = function()
+        return game.manager.state == "SHOP";
+    end
+    pet.onDragStart = function()
         if game.manager.state == "SHOP" then
-            if pet.inputState == "IDLE" then
-                pet.inputState = "HELD";
-            end
+            game.manager.dragPet(pet);
         end
     end
-    pet.onMouseUp = function()
+    pet.onClick = function()
         if game.manager.state == "SHOP" then
-            if pet.inputState == "SELECTED" then
+            if game.manager.selectedPet == pet then
                 game.manager.clearSelection();
-            elseif game.manager.draggingPet and game.manager.draggingPet ~= pet then
-                local dragged = game.manager.draggingPet;
-                pet.combineAction(dragged);
-                game.manager.cleanupDrag();
-                game.manager.flushStack();
             elseif game.manager.selectedPet and game.manager.selectedPet ~= pet then
                 local selected = game.manager.selectedPet;
                 pet.combineAction(selected);
@@ -342,22 +340,34 @@ Pet = function(id)
                     end
                 end
                 game.manager.clearSelection();
-            elseif game.manager.draggingFood then
-                if not pet.fromShop then
-                    local didBuy = game.manager.buyFood(game.manager.draggingFood);
-                    if didBuy then
-                        local foodAte = game.manager.draggingFood;
-                        foodAte.eat(pet,foodAte);
-                        game.manager.flushStack();
-                    end
-                end
-                game.manager.cleanupDrag();
-            elseif pet.inputState == "HELD" then
+            else
                 game.manager.selectPet(pet);
             end
         end
     end
-    pet.onRightMouseUp = function()
+    pet.onDrop = function(source)
+        if game.manager.state ~= "SHOP" or source == pet then
+            return false;
+        end
+
+        if source.dragKind == "pet" then
+            pet.combineAction(source);
+            game.manager.flushStack();
+            return true;
+        end
+
+        if source.dragKind == "food" and not pet.fromShop then
+            local didBuy = game.manager.buyFood(source);
+            if didBuy then
+                source.eat(pet,source);
+                game.manager.flushStack();
+                return true;
+            end
+        end
+
+        return false;
+    end
+    pet.onRightClick = function()
         if game.manager.state == "SHOP" and pet.fromShop then
             pet.frozen = not pet.frozen;
         end
@@ -440,20 +450,6 @@ Pet = function(id)
         if graham.isFromFoodShop then
         end
         game.abilityStack.startProcessing(function() end);
-    end
-    pet.onHoverExit = function()
-        if game.manager.state == "SHOP" then
-            if pet.inputState == "HELD" then
-                game.manager.dragPet(pet);
-            end
-        end
-    end
-    pet.onHoverEnter = function()
-        if game.manager.state == "SHOP" then
-            if pet.inputState == "DRAGGING" then
-                pet.inputState = "HELD";
-            end
-        end
     end
     pet.getTeam = function()
         return pet.enemy and game.enemyTeam or game.team;

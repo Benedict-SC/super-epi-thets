@@ -2,37 +2,53 @@ Manager = function()
     local mng = {};
     mng.state = "SHOP";
     mng.hideUI = false;
+    mng.inputTargets = Array();
+    mng.pointer = {
+        hovered = nil,
+        pressed = nil,
+        rightPressed = nil,
+        dragSource = nil,
+        pressX = 0,
+        pressY = 0,
+        lastLeftDown = false,
+        lastRightDown = false
+    };
+    mng.dragThreshold = 8;
 
     mng.sellButton = Button("img/sell.png");
     mng.sellButton.x = 560;
     mng.sellButton.y = 10;
-    mng.sellButton.onMouseUp = function()
-        if mng.selectedPet then
-            game.run.gold = game.run.gold + mng.selectedPet.getSellPrice();
-            game.team.removePet(mng.selectedPet);
-            mng.state = "ANIMATE";
-            game.abilityStack.registerAbilityTrigger(mng.selectedPet,"sell",mng.selectedPet.sell);
-            mng.triggerForTeam("friendSold",mng.selectedPet,function()
-                mng.state = "SHOP";
-            end);
-            mng.clearSelection();
-        elseif mng.draggingPet then
-            game.run.gold = game.run.gold + mng.draggingPet.getSellPrice();
-            game.team.removePet(mng.draggingPet);
-            mng.state = "ANIMATE";
-            game.abilityStack.registerAbilityTrigger(mng.draggingPet,"sell",mng.draggingPet.sell);
-            mng.triggerForTeam("friendSold",mng.draggingPet,function()
-                mng.state = "SHOP";
-            end);
-            mng.cleanupDrag();
+    mng.sellPet = function(pet)
+        if pet.fromShop then
+            return;
         end
+        game.run.gold = game.run.gold + pet.getSellPrice();
+        game.team.removePet(pet);
+        mng.state = "ANIMATE";
+        game.abilityStack.registerAbilityTrigger(pet,"sell",pet.sell);
+        mng.triggerForTeam("friendSold",pet,function()
+            mng.state = "SHOP";
+        end);
+    end
+    mng.sellButton.onClick = function()
+        if mng.state == "SHOP" and mng.selectedPet then
+            mng.sellPet(mng.selectedPet);
+            mng.clearSelection();
+        end
+    end
+    mng.sellButton.onDrop = function(source)
+        if mng.state ~= "SHOP" or source.dragKind ~= "pet" then
+            return false;
+        end
+        mng.sellPet(source);
+        return true;
     end
 
     mng.rollButton = Button("img/roll.png");
     mng.rollButton.x = 10;
     mng.rollButton.y = 420;
-    mng.rollButton.onMouseUp = function()
-        if game.run.gold > 0 then
+    mng.rollButton.onClick = function()
+        if mng.state == "SHOP" and game.run.gold > 0 then
             game.run.gold = game.run.gold - 1;
             mng.triggerGoldSpent(1);
             game.petShop.roll(game.run.tier);
@@ -43,19 +59,19 @@ Manager = function()
     mng.endButton = Button("img/end.png");
     mng.endButton.x = 680;
     mng.endButton.y = 10;
-    mng.endButton.onMouseUp = function()
+    mng.endButton.onClick = function()
         if mng.state == "SHOP" then
+            local tb = TeamBuilder();
+            game.enemyTeam = tb.generateEnemyTeam(game.run.turn,game.run.wins,5-game.run.lives);
             game.run.endTurn();
             mng.state = "ANIMATE";
             mng.triggerForTeam("endOfTurn",nil,function()
                 asyn.doOverTime(0.8,function(percent) 
                     game.fadeAlpha = percent;
                 end,function() 
-                    --replace teams with instanced teams;
+                    --replace team with instanced team
                     game.savedTeam = game.team;
-                    game.savedEnemyTeam = game.enemyTeam;
                     game.team = game.team.getCopy();
-                    game.enemyTeam = game.enemyTeam.getCopy();
                     --hide UI
                     mng.hideUI = true;
                     mng.state = "BATTLE";
@@ -223,6 +239,106 @@ Manager = function()
             return;
         end
     end
+    mng.beginInputFrame = function()
+        mng.inputTargets = Array();
+    end
+    mng.registerClickable = function(clickable)
+        mng.inputTargets.push(clickable);
+    end
+    mng.hitTest = function(mx,my)
+        for i=#mng.inputTargets,1,-1 do
+            local clickable = mng.inputTargets[i];
+            if clickable and clickable.containsPoint(mx,my) then
+                return clickable;
+            end
+        end
+        return nil;
+    end
+    mng.setHovered = function(nextHovered)
+        local current = mng.pointer.hovered;
+        if current == nextHovered then
+            return;
+        end
+        if current then
+            current.hovered = false;
+            current.onHoverExit();
+        end
+        mng.pointer.hovered = nextHovered;
+        if nextHovered then
+            nextHovered.hovered = true;
+            nextHovered.onHoverEnter();
+        end
+    end
+    mng.finishLeftClick = function(target)
+        if target and target == mng.pointer.pressed then
+            target.onClick();
+        end
+    end
+    mng.finishDrop = function(target)
+        local source = mng.pointer.dragSource;
+        if target and target ~= source then
+            target.onDrop(source);
+        end
+        mng.cleanupDrag();
+    end
+    mng.updateInput = function()
+        if mng.hideUI or (mng.state ~= "SHOP" and mng.state ~= "BATTLE" and mng.state ~= "ANIMATE") then
+            mng.setHovered(nil);
+            mng.pointer.pressed = nil;
+            mng.pointer.rightPressed = nil;
+            mng.pointer.dragSource = nil;
+            mng.pointer.lastLeftDown = love.mouse.isDown(1);
+            mng.pointer.lastRightDown = love.mouse.isDown(2);
+            return;
+        end
+
+        local mx, my = love.mouse.getPosition();
+        local hovered = mng.hitTest(mx,my);
+        mng.setHovered(hovered);
+
+        local leftDown = love.mouse.isDown(1);
+        local rightDown = love.mouse.isDown(2);
+        local leftPressed = leftDown and not mng.pointer.lastLeftDown;
+        local leftReleased = mng.pointer.lastLeftDown and not leftDown;
+        local rightPressed = rightDown and not mng.pointer.lastRightDown;
+        local rightReleased = mng.pointer.lastRightDown and not rightDown;
+
+        if leftPressed then
+            mng.pointer.pressed = hovered;
+            mng.pointer.pressX = mx;
+            mng.pointer.pressY = my;
+        elseif leftDown and mng.pointer.pressed and not mng.pointer.dragSource then
+            local dx = mx - mng.pointer.pressX;
+            local dy = my - mng.pointer.pressY;
+            if (dx * dx) + (dy * dy) >= (mng.dragThreshold * mng.dragThreshold) then
+                local source = mng.pointer.pressed;
+                if source.canDrag() then
+                    mng.pointer.dragSource = source;
+                    source.onDragStart();
+                end
+            end
+        elseif leftReleased then
+            if mng.pointer.dragSource then
+                mng.finishDrop(hovered);
+            else
+                mng.finishLeftClick(hovered);
+            end
+            mng.pointer.pressed = nil;
+            mng.pointer.dragSource = nil;
+        end
+
+        if rightPressed then
+            mng.pointer.rightPressed = hovered;
+        elseif rightReleased then
+            if hovered and hovered == mng.pointer.rightPressed then
+                hovered.onRightClick();
+            end
+            mng.pointer.rightPressed = nil;
+        end
+
+        mng.pointer.lastLeftDown = leftDown;
+        mng.pointer.lastRightDown = rightDown;
+    end
 
     mng.selectPet = function(pet,fromShop)
         mng.setAllIdle();
@@ -357,15 +473,7 @@ Manager = function()
             if not slot then break; end
             slot.inputUpdate(0,0);
         end
-        if mng.lastFrameMouseDown and not love.mouse.isDown(1) then
-            if mng.draggingPet then
-                --do the thing where you drop it.
-                mng.draggingPet.inputState = "IDLE";
-                mng.draggingPet = nil;
-            end
-        end
-
-        mng.lastFrameMouseDown = love.mouse.isDown(1);
+        mng.updateInput();
     end
     mng.draw = function()
         mng.sellButton.draw();

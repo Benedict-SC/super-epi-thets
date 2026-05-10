@@ -33,6 +33,7 @@ require("abilities");
 require("abilitystack");
 require("emptyslot");
 require("team");
+require("teambuilder");
 require("shops");
 require("field");
 require("run");

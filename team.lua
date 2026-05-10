@@ -174,6 +174,26 @@ Team = function()
         end
         return all;
     end
+    team.size = function()
+        return #(team.getAllPets());
+    end
+    team.hasA = function(petId,dontCountLv3)
+        local all = Array();
+        for i=1,5,1 do
+            if team.listBackToFront[i] then
+                if team.listBackToFront[i].id == petId then
+                    if dontCountLv3 then
+                        if team.listBackToFront[i].level < 3 then
+                            return true;
+                        end
+                    else
+                        return true;
+                    end
+                end
+            end
+        end
+        return false;
+    end
     team.isInAlphabeticalOrder = function()
         local namestring = "";
         for i=1,5,1 do

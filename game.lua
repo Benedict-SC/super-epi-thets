@@ -8,7 +8,7 @@ Game = function()
     game.abilityStack = AbilityStack();
 
     game.team = Team();
-    game.team.addNewPet("lorelai");
+    --[[game.team.addNewPet("lorelai");
     game.team.get(1).addExp(2);
     game.team.get(1).addExp(3);
     local mem1 = game.team.get(1);
@@ -39,7 +39,7 @@ Game = function()
     --game.enemyTeam.get(5).addExp(3);
     --game.enemyTeam.get(5).hp = 20;
     game.enemyTeam.faceRight = false;
-    game.enemyTeam.x = 960;
+    game.enemyTeam.x = 960;]]--
 
     --game.run.tier = 6;
     --game.run.gold = 99;
@@ -53,6 +53,7 @@ Game = function()
     end
 
     game.update = function()
+        game.manager.beginInputFrame();
         game.team.update();
         game.petShop.update();
         game.itemShop.update();

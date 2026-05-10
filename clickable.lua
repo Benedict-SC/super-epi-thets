@@ -3,86 +3,43 @@ Clickable = function()
     clickable.x = 0;
     clickable.y = 0;
     clickable.inputUpdate = function(xoff,yoff)
-        local mouseDown = love.mouse.isDown(1);
-        local rightMouseDown = love.mouse.isDown(2);
         local img = clickable.img;
         if not img then
-            clickable.lastMouseDown = mouseDown;
-            clickable.lastRightMouseDown = rightMouseDown;
             return;
         end
 
         xoff = xoff or 0;
         yoff = yoff or 0;
-
-        local mx, my = love.mouse.getPosition();
-        local x = clickable.x + xoff;
-        local y = clickable.y + yoff;
-        local hovered = mx >= x and my >= y and mx < x + img:getWidth() and my < y + img:getHeight();
-        local wasHovered = clickable.hovered;
-        local mousePressed = mouseDown and not clickable.lastMouseDown;
-        local mouseReleased = clickable.lastMouseDown and not mouseDown;
-        local rightMousePressed = rightMouseDown and not clickable.lastRightMouseDown;
-        local rightMouseReleased = clickable.lastRightMouseDown and not rightMouseDown;
-
-        if hovered then
-            if not wasHovered then
-                clickable.hovered = true;
-                clickable.onHoverEnter();
-            end
-
-            if mousePressed then
-                if not clickable.mouseDown then
-                    clickable.mouseDown = true;
-                    clickable.onMouseDown();
-                end
-            --don't put that extra clickable.mouseDown check back- I want mouseUp events to fire even if the click didn't originate there, for the purposes of drag interactions
-            elseif mouseReleased then--and clickable.mouseDown then
-                clickable.mouseDown = false;
-                clickable.onMouseUp();
-            end
-
-            if rightMousePressed then
-                if not clickable.rightMouseDown then
-                    clickable.rightMouseDown = true;
-                    clickable.onRightMouseDown();
-                end
-            elseif rightMouseReleased then--and clickable.rightMouseDown then
-                clickable.rightMouseDown = false;
-                clickable.onRightMouseUp();
-            end
-        else
-            if wasHovered then
-                clickable.hovered = false;
-                clickable.onHoverExit();
-            end
-
-            if clickable.mouseDown and mouseReleased then
-                clickable.mouseDown = false;
-                clickable.onMouseUp();
-            end
-
-            if clickable.rightMouseDown and rightMouseReleased then
-                clickable.rightMouseDown = false;
-                clickable.onRightMouseUp();
-            end
+        clickable.screenX = clickable.x + xoff;
+        clickable.screenY = clickable.y + yoff;
+        if game and game.manager and game.manager.registerClickable then
+            game.manager.registerClickable(clickable);
         end
-
-        clickable.lastMouseDown = mouseDown;
-        clickable.lastRightMouseDown = rightMouseDown;
     end
-    --specific clickables should override the following functions- blank ones are provided here in the base class to avoid crashing when called
+    clickable.containsPoint = function(px,py)
+        local img = clickable.img;
+        if not img then
+            return false;
+        end
+        local x = clickable.screenX or clickable.x;
+        local y = clickable.screenY or clickable.y;
+        return px >= x and py >= y and px < x + img:getWidth() and py < y + img:getHeight();
+    end
     clickable.onHoverEnter = function()
     end
     clickable.onHoverExit = function()
     end
-    clickable.onMouseDown = function()
+    clickable.onClick = function()
     end
-    clickable.onMouseUp = function()
+    clickable.onRightClick = function()
     end
-    clickable.onRightMouseDown = function()
+    clickable.canDrag = function()
+        return false;
     end
-    clickable.onRightMouseUp = function()
+    clickable.onDragStart = function()
+    end
+    clickable.onDrop = function(source)
+        return false;
     end
     return clickable;
 end

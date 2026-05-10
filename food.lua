@@ -13,6 +13,7 @@ Food = function(id)
     food.x = 0;
     food.y = 0;
     food.inputState = "IDLE";
+    food.dragKind = "food";
 
     food.priceModifier = 0;
 
@@ -49,39 +50,26 @@ Food = function(id)
         love.graphics.draw(dice[food.tier],xoff+food.x,yoff+food.y-5);
         popColor();
     end
-    food.onMouseDown = function()
+    food.canDrag = function()
+        return game.manager.state == "SHOP";
+    end
+    food.onDragStart = function()
         if game.manager.state == "SHOP" then
-            if food.inputState == "IDLE" then
-                food.inputState = "HELD";
-            end
+            game.manager.dragFood(food);
         end
     end
-    food.onMouseUp = function()
+    food.onClick = function()
         if game.manager.state == "SHOP" then
-            if food.inputState == "HELD" then
-                game.manager.selectFood(food);
-            elseif food.inputState == "SELECTED" then
+            if game.manager.selectedFood == food then
                 game.manager.clearSelection();
+            else
+                game.manager.selectFood(food);
             end
         end
     end
-    food.onRightMouseUp = function()
+    food.onRightClick = function()
         if game.manager.state == "SHOP" then
             food.frozen = not food.frozen;
-        end
-    end
-    food.onHoverExit = function()
-        if game.manager.state == "SHOP" then
-            if food.inputState == "HELD" then
-                game.manager.dragFood(food);
-            end
-        end
-    end
-    food.onHoverEnter = function()
-        if game.manager.state == "SHOP" then
-            if food.inputState == "DRAGGING" then
-                food.inputState = "HELD";
-            end
         end
     end
     return food;

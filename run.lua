@@ -9,13 +9,18 @@ Run = function()
     run.goldSpentThisTurn = 0;
     run.shopSlots = 3;
     run.itemSlots = 1;
-    run.tier = 6;
+    run.tier = 1;
     run.healed = false;
     run.endTurn = function()
         run.gold = 0;
     end
     run.newTurn = function()
         run.turn = run.turn + 1;
+        if run.turn == 3 then
+            if run.lives < 5 then
+                run.lives = run.lives + 1;
+            end
+        end
         run.gold = 10 + run.extraGoldNextTurn;
         if run.gold < 0 then run.gold = 0; end
         run.extraGoldNextTurn = 0;

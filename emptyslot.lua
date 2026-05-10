@@ -4,62 +4,55 @@ EmptySlot = function(index)
     slot.pos = index;
     slot.x = 0;
     slot.y = 0;
-    slot.onMouseUp = function()
+    slot.placePet = function(pet)
+        if not pet.fromShop then
+            game.team.movePet(pet,slot.pos)
+            pet.inputState = "IDLE";
+            return true;
+        end
+
+        if pet.isFromFoodShop then
+            local success = game.manager.buyFood(pet);
+            if success then
+                pet.frozen = false;
+                game.team.addExistingPet(pet,slot.pos);
+                game.itemShop.buy(pet)
+                pet.fromShop = false;
+                pet.isFromFoodShop = false;
+                pet.inputState = "IDLE";
+                return true;
+            end
+            return false;
+        end
+
+        local success = game.manager.buyPet(pet);
+        if success then
+            pet.frozen = false;
+            game.team.addExistingPet(pet,slot.pos);
+            game.petShop.buy(pet)
+            pet.inputState = "IDLE";
+            return true;
+        end
+        return false;
+    end
+    slot.onClick = function()
         if game.manager.state == "SHOP" then
-            if game.manager.draggingPet then
-                local pet = game.manager.draggingPet;
-                if not pet.fromShop then
-                    game.team.movePet(pet,slot.pos)
-                    pet.inputState = "IDLE";
-                else
-                    if pet.isFromFoodShop then
-                        local success = game.manager.buyFood(pet);
-                        if (success) then
-                            pet.frozen = false;
-                            game.team.addExistingPet(pet,slot.pos);
-                            game.itemShop.buy(pet)
-                            pet.fromShop = false;
-                            pet.isFromFoodShop = false;
-                            pet.inputState = "IDLE";
-                        end
-                    else
-                        local success = game.manager.buyPet(pet);
-                        if (success) then
-                            pet.frozen = false;
-                            game.team.addExistingPet(pet,slot.pos);
-                            game.petShop.buy(pet)
-                            pet.inputState = "IDLE";
-                        end
-                    end
-                end
-                game.manager.cleanupDrag();
-            elseif game.manager.selectedPet then
+            if game.manager.selectedPet then
                 local pet = game.manager.selectedPet;
-                if not pet.fromShop then
-                    game.team.addExistingPet(pet,slot.pos)
-                    pet.inputState = "IDLE";
-                else
-                    if pet.isFromFoodShop then
-                        local success = game.manager.buyFood(pet);
-                        if (success) then
-                            pet.frozen = false;
-                            game.team.addExistingPet(pet,slot.pos);
-                            game.itemShop.buy(pet)
-                            pet.inputState = "IDLE";
-                        end
-                    else
-                        local success = game.manager.buyPet(pet);
-                        if (success) then
-                            pet.frozen = false;
-                            game.team.addExistingPet(pet,slot.pos);
-                            game.petShop.buy(pet)
-                            pet.inputState = "IDLE";
-                        end
-                    end
+                if slot.placePet(pet) then
+                    game.manager.clearSelection();
                 end
-                game.manager.clearSelection();
             end
         end
+    end
+    slot.onDrop = function(source)
+        if game.manager.state ~= "SHOP" then
+            return false;
+        end
+        if source.dragKind ~= "pet" then
+            return false;
+        end
+        return slot.placePet(source);
     end
     slot.draw = function()
         love.graphics.draw(slot.img,slot.x,slot.y);
