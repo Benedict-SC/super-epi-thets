@@ -282,7 +282,7 @@ Manager = function()
         mng.cleanupDrag();
     end
     mng.updateInput = function()
-        if mng.hideUI or (mng.state ~= "SHOP" and mng.state ~= "BATTLE" and mng.state ~= "ANIMATE") then
+        if (mng.hideUI and (mng.state ~= "ENDING")) or (mng.state ~= "SHOP" and mng.state ~= "BATTLE" and mng.state ~= "ANIMATE" and mng.state ~= "ENDING") then
             mng.setHovered(nil);
             mng.pointer.pressed = nil;
             mng.pointer.rightPressed = nil;
@@ -465,6 +465,7 @@ Manager = function()
     end
 
     mng.update = function()
+        game.endscreen.update();
         mng.sellButton.inputUpdate(0,0);
         mng.rollButton.inputUpdate(0,0);
         mng.endButton.inputUpdate(0,0);

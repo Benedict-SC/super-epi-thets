@@ -1,7 +1,7 @@
 TeamBuilder = function()
     local tb = {};
     tb.init = function()
-        tb.winPoints = -4; --it should take four wins before it starts punishing you;
+        tb.winPoints = 0; 
         tb.lossPenalties = 0;
     end
     tb.generateEnemyTeam = function(turn,wins,losses)
@@ -24,6 +24,7 @@ TeamBuilder = function()
             if (team.size() < 5) and gold >= 3 then --if there's empty space, buy something random
                 local randomBuy = tb.buySomethingGood(team,shop);
                 team.addNewPet(randomBuy.id,1);
+                team.get(1).enemy = true;
                 gold = gold - 3;
             else
                 local dupes = tb.shopDupes(shop,team);
@@ -31,11 +32,14 @@ TeamBuilder = function()
                     local randomBuy = dupes[math.random(#dupes)];
                     for i=1,5,1 do
                         local pet = team.get(i);
-                        pet.xp = pet.xp + 1;
-                        if pet.xp == 2 then pet.level = 2; end
-                        if pet.xp == 5 then pet.level = 3; end
-                        pet.atk = pet.atk + 1;
-                        pet.hp = pet.hp + 1;
+                        if pet.id == randomBuy.id then
+                            pet.xp = pet.xp + 1;
+                            if pet.xp == 2 then pet.level = 2; end
+                            if pet.xp == 5 then pet.level = 3; end
+                            pet.atk = pet.atk + 1;
+                            pet.hp = pet.hp + 1;
+                            break;
+                        end
                     end
                     gold = gold - 3;
                 else
@@ -63,7 +67,17 @@ TeamBuilder = function()
         if team.hasA("feenie") then
             --distribute 2xturn count extra hp to random pets
             local amt = (turn-2)*2;
-
+            local pets = team.getAllPets();
+            for i=1,amt,1 do
+                local pet = pets[math.random(#pets)];
+                pet.hp = pet.hp + 1;
+            end
+        end
+        if team.hasA("naven") then
+            local estTurnsWithNaven = math.ceil((turn - 2)/2)
+            local getn = team.findFirst("naven");
+            getn.atk = getn.atk + estTurnsWithNaven;
+            getn.hp = getn.hp + estTurnsWithNaven;
         end
         local all = team.getAllPets();
         all.forEach(function(el) 
@@ -128,7 +142,7 @@ TeamBuilder = function()
         if team.hasA("wellwatcher") or team.hasA("martin") then
             gold = gold + 1;
         end
-        if team.hasA("zora") then
+        if team.hasA("zora") or team.hasA("naven") then
             gold = gold + 2;
         end
         return gold;

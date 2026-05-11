@@ -39,6 +39,7 @@ require("field");
 require("run");
 require("battle");
 require("manager");
+require("endscreen");
 require("game");
 game = Game();
 game.init();

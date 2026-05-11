@@ -8,7 +8,8 @@ Game = function()
     game.abilityStack = AbilityStack();
 
     game.team = Team();
-    --[[game.team.addNewPet("lorelai");
+    game.endscreen = EndScreen();
+    --[[game.team.addNewPet("darkstar");
     game.team.get(1).addExp(2);
     game.team.get(1).addExp(3);
     local mem1 = game.team.get(1);
@@ -49,7 +50,7 @@ Game = function()
     game.init = function()
         game.petShop.roll(1);
         game.itemShop.roll(1);
-        game.itemShop.stock("ambrosia");
+        --game.itemShop.stock("ambrosia");
     end
 
     game.update = function()
@@ -57,6 +58,7 @@ Game = function()
         game.team.update();
         game.petShop.update();
         game.itemShop.update();
+        --game.endscreen.update();
         game.manager.update();
     end
     game.draw = function()
@@ -81,6 +83,7 @@ Game = function()
         love.graphics.setColor(0,0,0,game.fadeAlpha);
         love.graphics.rectangle("fill",0,0,gamewidth,gameheight);
         popColor();
+        game.endscreen.draw();
     end
     return game;
 end

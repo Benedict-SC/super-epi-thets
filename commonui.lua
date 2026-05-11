@@ -7,3 +7,5 @@ dice = {love.graphics.newImage("img/tier1.png"), love.graphics.newImage("img/tie
 tumpet = love.graphics.newImage("img/oddtrumpets.png");
 star = love.graphics.newImage("img/star.png");
 petlink = love.graphics.newImage("img/link.png");
+youlose = love.graphics.newImage("img/dead.png");
+youwin = love.graphics.newImage("img/dewinner.png");

@@ -270,16 +270,18 @@ Pet = function(id)
             love.graphics.draw(petlink,xoff+pet.x+68,yoff+pet.y+118);
         end
         if ((pet.id == "molly") or pet.copyingMolly) and not pet.fromShop then
+            local flipmod = 0;
+            if pet.enemy then flipmod = -100; end
             love.graphics.setColor(0.17,0.8,0.49,0.29);
             love.graphics.ellipse(  "fill",
-                                    xoff+ ((xscale == -1) and 100 or 0) + pet.x + 50,
+                                    xoff+ ((xscale == -1) and 100 or 0) + pet.x + 50 + flipmod,
                                     yoff+pet.y+50,
                                     (50 + (100* (pet.level - 1)))*1.11,
                                     (50 + (100* (pet.level - 1)))*0.96
             );
             love.graphics.setColor(0.33,0.81,0.44,0.8);
             love.graphics.ellipse(  "line",
-                                    xoff+ ((xscale == -1) and 100 or 0) + pet.x + 50,
+                                    xoff+ ((xscale == -1) and 100 or 0) + pet.x + 50 + flipmod,
                                     yoff+pet.y+50,
                                     (50 + (100* (pet.level - 1)))*1.11,
                                     (50 + (100* (pet.level - 1)))*0.96

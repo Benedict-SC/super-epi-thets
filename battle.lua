@@ -312,34 +312,40 @@ Battle = function(friendly,enemy)
         asyn.doOverTime(0.8,function(percent) 
             game.fadeAlpha = percent;
         end,function() 
-            --replace teams with original teams;
-            game.team = game.savedTeam;
-            for i=1,5,1 do
-                if game.team.get(i) then
-                    game.team.get(i).battlesFought = game.team.get(i).battlesFought + 1;
-                end
-            end
-            game.enemyTeam = game.savedEnemyTeam;
             if won == 1 then
                 game.run.wins = game.run.wins + 1;
             elseif won == -1 then
                 game.run.lives = game.run.lives - 1;
             end
-            game.run.newTurn();
-            game.petShop.roll(game.run.tier);
-            game.itemShop.roll(game.run.tier);
-            --hide UI
             game.manager.hideUI = false;
             game.manager.state = "ANIMATE";
             game.manager.battle = nil;
-            --fade back in
-            asyn.doOverTime(0.8,function(percent) 
-                game.fadeAlpha = 1-percent;
-            end,function() 
-                game.fadeAlpha = 0;
-                game.manager.state = "START";
-                game.manager.startTurn();
-            end);
+            if game.run.lives <= 0 then
+                game.endscreen.trigger(false);
+            elseif game.run.wins >= 10 then
+                game.endscreen.trigger(true);
+            else
+            --replace teams with original teams;
+                game.team = game.savedTeam;
+                for i=1,5,1 do
+                    if game.team.get(i) then
+                        game.team.get(i).battlesFought = game.team.get(i).battlesFought + 1;
+                    end
+                end
+                game.enemyTeam = game.savedEnemyTeam;
+                game.run.newTurn();
+                game.petShop.roll(game.run.tier);
+                game.itemShop.roll(game.run.tier);
+                --hide UI
+                --fade back in
+                asyn.doOverTime(0.8,function(percent) 
+                    game.fadeAlpha = 1-percent;
+                end,function() 
+                    game.fadeAlpha = 0;
+                    game.manager.state = "START";
+                    game.manager.startTurn();
+                end);
+            end
         end)
     end
 

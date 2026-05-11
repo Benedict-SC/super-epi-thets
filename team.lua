@@ -79,10 +79,10 @@ Team = function()
         newPet.enemy = rootPet.enemy;
         local pos = rootPet.getIndex();
         if (pos+1 <= 5) and not team.get(pos+1) then
-            team.addExistingPet(pet,pos+1);
+            team.addExistingPet(newPet,pos+1);
             done();
         elseif team.isFull() then
-            rootPet.fling(pos,pet.id);
+            rootPet.fling(pos,newPet.id);
             done();
         else
             local nearestSpaceBehind = pos - 1;
@@ -142,7 +142,7 @@ Team = function()
                         done();
                     end);
                 else
-                    rootPet.fling(pos,pet.id);
+                    rootPet.fling(pos,newPet.id);
                     done();
                 end
             end
@@ -193,6 +193,17 @@ Team = function()
             end
         end
         return false;
+    end
+    team.findFirst = function(petId)
+        local all = Array();
+        for i=1,5,1 do
+            if team.listBackToFront[i] then
+                if team.listBackToFront[i].id == petId then
+                    return team.listBackToFront[i];
+                end
+            end
+        end
+        return nil;
     end
     team.isInAlphabeticalOrder = function()
         local namestring = "";

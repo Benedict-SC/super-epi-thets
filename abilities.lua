@@ -370,6 +370,7 @@ giveAbilitiesToPet = function(pet)
             if pet.level == 1 then
                 if rn == 6 then
                     local newStar = Pet("darkstar");
+                    newStar.enemy = pet.enemy;
                     local spot = pet.getIndex();
                     local team = pet.getTeam();
                     team.replacePet(spot,newStar);
@@ -377,6 +378,7 @@ giveAbilitiesToPet = function(pet)
             elseif pet.level == 2 then
                 if rn >= 5 then
                     local newStar = Pet("darkstar");
+                    newStar.enemy = pet.enemy;
                     newStar.atk = 6;
                     newStar.hp = 3;
                     local spot = pet.getIndex();
@@ -386,6 +388,7 @@ giveAbilitiesToPet = function(pet)
             else --pet.level == 3
                 if rn >= 4 then
                     local newStar = Pet("darkstar");
+                    newStar.enemy = pet.enemy;
                     newStar.atk = 9;
                     newStar.hp = 6;
                     newStar.xp = 2;
