@@ -260,7 +260,19 @@ giveAbilitiesToPet = function(pet)
             if pet.level > 2 then
                 amount = amount + 3;
             end
-            game.manager.battle.dealDirectDamage(amount,pet,sourceAndAmount.source,done);
+            if sourceAndAmount then
+                if sourceAndAmount.source then
+                    if sourceAndAmount.source.hp > 0 then
+                        game.manager.battle.dealDirectDamage(amount,pet,sourceAndAmount.source,done);
+                    else
+                        done();
+                    end
+                else
+                    done();
+                end
+            else
+                done();
+            end
         end
         pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
     elseif pet.id == "feenie" then
@@ -736,13 +748,19 @@ giveAbilitiesToPet = function(pet)
         end
         pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
     elseif pet.id == "howie" then
+        pet.honeysGiven = 0;
         pet.friendGainedAilment = function(done,friend)
-            game.manager.animateThrow(pet,friend,"img/perk/honeyedsnack.png",function()
-                friend.atk = friend.atk + pet.level;
-                local honey = HoneyedSnackPerk();
-                friend.gainPerk(honey);
-                done();
-            end);
+            if pet.honeysGiven < 10 then
+                pet.honeysGiven = pet.honeysGiven + 1;
+                game.manager.animateThrow(pet,friend,"img/perk/honeyedsnack.png",function()
+                    friend.atk = friend.atk + pet.level;
+                    local honey = HoneyedSnackPerk();
+                    friend.gainPerk(honey);
+                    done();
+                end);
+            else
+                done()
+            end
         end
         pet.abilities = ArrayFromRawArray({{id="friendGainedAilment",func = pet.friendGainedAilment}})
     elseif pet.id == "tannenbaum" then
@@ -1308,9 +1326,9 @@ getAbilityText = function(id)
         };
     elseif id == "howie" then
         return {
-            "Friend gained ailment: Replace it with Honeyed Snack and give +1 attack.",
-            "Friend gained ailment: Replace it with Honeyed Snack and give +2 attack.",
-            "Friend gained ailment: Replace it with Honeyed Snack and give +3 attack."
+            "Friend gained ailment: Replace it with Honeyed Snack and give +1 attack. Works 10 times per battle.",
+            "Friend gained ailment: Replace it with Honeyed Snack and give +2 attack. Works 10 times per battle.",
+            "Friend gained ailment: Replace it with Honeyed Snack and give +3 attack. Works 10 times per battle."
         }
     elseif id == "tannenbaum" then
         return {

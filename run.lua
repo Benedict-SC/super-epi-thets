@@ -19,6 +19,7 @@ Run = function()
         if run.turn == 3 then
             if run.lives < 5 then
                 run.lives = run.lives + 1;
+                run.healed = true;
             end
         end
         run.gold = 10 + run.extraGoldNextTurn;

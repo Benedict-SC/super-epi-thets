@@ -10,7 +10,7 @@ Game = function()
 
     game.team = Team();
     game.endscreen = EndScreen();
-    --[[game.team.addNewPet("wailmer");
+    --[[game.team.addNewPet("spike");
     game.team.addNewPet("wailmer");
     game.team.addNewPet("wailmer");
     game.team.addNewPet("wailmer");

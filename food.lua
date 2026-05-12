@@ -45,16 +45,16 @@ Food = function(id)
             end
             if food.hovered then
                 love.graphics.setColor(0,0,0);
-                love.graphics.rectangle("fill",xoff - 100,yoff-130,300,110);
+                love.graphics.rectangle("fill",xoff - 100,yoff-180,300,160);
                 love.graphics.setColor(1,1,1);
-                love.graphics.rectangle("fill",xoff - 95,yoff-125,290,100);
-                love.graphics.draw(dice[food.tier],xoff-96,yoff-126);
+                love.graphics.rectangle("fill",xoff - 95,yoff-175,290,150);
+                love.graphics.draw(dice[food.tier],xoff-96,yoff-176);
                 love.graphics.setColor(1,0.29,0);
-                love.graphics.print(food.name,xoff - 52,yoff-129);
+                love.graphics.print(food.name,xoff - 52,yoff-179);
                 love.graphics.setColor(0,0,0);
                 if food.effectText then
                     love.graphics.setFont(smallfont_bold);
-                    love.graphics.printf(food.name .. " - " .. food.effectText,xoff-90,yoff-90,280);
+                    love.graphics.printf(food.effectText,xoff-90,yoff-140,280);
                     love.graphics.setFont(mainfont);
                 end
             end

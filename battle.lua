@@ -237,6 +237,10 @@ Battle = function(friendly,enemy)
         end);
     end
     battle.dealDirectDamage = function(amount,source,target,done,defer) 
+        if not target then
+            done();
+            return;
+        end
         local totalDamage = amount - target.defense();
         if totalDamage < 0 then totalDamage = 0; end
         local projectileImage = love.graphics.newImage(source.projectileUrl);
@@ -254,6 +258,15 @@ Battle = function(friendly,enemy)
             projectile.y = origin.y + (dy * percent) - (4 * arcHeight * percent * (1 - percent));
         end,function() 
             battle.extras.removeElement(projectile);
+            local between = game.manager.getPetsBetween(source,target);
+            for i=1,#between,1 do
+                local pet = between[i];
+                pet.allAbilities().forEach(function(el) 
+                    if el.id == "somethingFlewOverhead" then
+                        game.abilityStack.registerAbilityTrigger(pet,"somethingFlewOverhead",el.func,args);
+                    end
+                end);
+            end
             target.hp = target.hp - totalDamage;
             if target.perk.id == "pepper" and (not target.isMollywhopped()) then
                 if target.hp <= 0 then
