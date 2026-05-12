@@ -26,11 +26,15 @@ giveAbilitiesToPet = function(pet)
     pet.somethingFlewOverhead = function(done) done(); end
     pet.anyoneAttacked = function(done) done(); end
     pet.abilities = Array();
-    pet.abilityText = {
-        pet.name .. " isn't implemented yet.",
-        pet.name .. " isn't implemented yet.",
-        pet.name .. " isn't implemented yet."
-    }
+    pet.abilityText = getAbilityText(pet.id);
+    if not (pet.abilityText) then
+        pet.abilityText = {
+            pet.name .. " isn't implemented yet.",
+            pet.name .. " isn't implemented yet.",
+            pet.name .. " isn't implemented yet."
+        }
+    end
+    
 
     if pet.id == "ben" then
         pet.beforeBattle = function(done)
@@ -52,11 +56,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Before battle: Randomly leaves (1/2 chance).",
-            "Before battle: Randomly leaves (1/3 chance).",
-            "Before battle: Randomly leaves (1/6 chance)."
-        }
         pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}});
     elseif pet.id == "crapgorps" then
         pet.startOfBattle = function(done)
@@ -75,11 +74,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Start of battle: Gain 1 health for each 2 battles fought.",
-            "Start of battle: Gain 1 health for each battle fought.",
-            "Start of battle: Gain 2 health for each battle fought."
-        }
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}});
     elseif pet.id == "giovanni" then
         pet.startOfTurn = function(done)
@@ -101,11 +95,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end)
         end
-        pet.abilityText = {
-            "Start of turn: Stock a Random soup up to tier 2.",
-            "Start of turn: Stock a Random soup up to tier 4.",
-            "Start of turn: Stock a Random soup up to tier 6."
-        }
         pet.abilities = ArrayFromRawArray({{id="startOfTurn",func = pet.startOfTurn}})
     elseif pet.id == "flamethrower" then
         pet.projectileUrl = "img/perk/toasty.png";
@@ -147,11 +136,6 @@ giveAbilitiesToPet = function(pet)
             end
             asyn.runSerial(sequentialToasts,finishToasts);
         end
-        pet.abilityText = {
-            "Before attack: Give Toasty to the first enemy ahead.",
-            "Before attack: Give Toasty to the first two enemies ahead.",
-            "Before attack: Give Toasty to the first three enemies ahead."
-        }
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
     elseif pet.id == "martin" then
         pet.friendGainedAilment = function(done,friend)
@@ -170,11 +154,6 @@ giveAbilitiesToPet = function(pet)
                 end)
             end)
         end
-        pet.abilityText = {
-            "Friend gained ailment: Gain 1 gold next turn.",
-            "Friend gained ailment: Gain 2 gold next turn.",
-            "Friend gained ailment: Gain 3 gold next turn.",
-        }
         pet.abilities = ArrayFromRawArray({{id="friendGainedAilment",func = pet.friendGainedAilment}})
     elseif pet.id == "gansley" then
         pet.projectileUrl = "img/gansleybuck.png";
@@ -190,23 +169,18 @@ giveAbilitiesToPet = function(pet)
             local target = opponent;
             if coinflip == 1 then
                 target = pet;
-                sound.play("danuhoh");
+                --sound.play("danuhoh");
             else
-                sound.play("danha");
+                --sound.play("danha");
             end
             game.manager.triggerRandom();
             game.manager.battle.dealDirectDamage(damageAmount,pet,target,done);
         end
-        pet.abilityText = {
-            "Before attack: Deal between 1 and 3 damage to self or enemy ahead, Randomly.",
-            "Before attack: Deal between 1 and 8 damage to self or enemy ahead, Randomly.",
-            "Before attack: Deal between 1 and 20 damage to self or enemy ahead, Randomly."
-        }
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func=pet.beforeAttack}})
     elseif pet.id == "wellwatcher" then
         pet.startOfBattle = function(done)
             pet.fainted = true;
-            sound.play("wellwatch");
+            --sound.play("wellwatch");
             if not pet.enemy then
                 game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
             end
@@ -231,7 +205,7 @@ giveAbilitiesToPet = function(pet)
                     "Looks like there's an open spot for Well Watcher..."
                 }
                 asyn.wait(0.5,function() 
-                    sound.play("thunder");
+                    --sound.play("thunder");
                 end);
                 newWatcher.alreadyDied = true;
                 newWatcher.summoned = function(newdone)
@@ -253,11 +227,6 @@ giveAbilitiesToPet = function(pet)
                 newWatcher.summoned(done);
             end
         end
-        pet.abilityText = {
-            "Start of battle: Gain 1 gold, faint, and summon a copy which takes 3 damage and turns into Sky Watcher.",
-            "Start of battle: Gain 2 gold, faint, and summon a copy which takes 6 damage and turns into Sky Watcher.",
-            "Start of battle: Gain 3 gold, faint, and summon a copy which takes 10 damage and turns into Sky Watcher."
-        };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "skywatcher" then
         pet.somethingFlewOverhead = function(done)
@@ -267,29 +236,13 @@ giveAbilitiesToPet = function(pet)
                 done();
             end)
         end
-        pet.abilityText = {
-            "Something flew overhead: Gain 1 attack and HP.",
-            "Something flew overhead: Gain 2 attack and HP.",
-            "Something flew overhead: Gain 3 attack and HP."
-        }
         pet.abilities = ArrayFromRawArray({{id="somethingFlewOverhead",func = pet.somethingFlewOverhead}})
     elseif pet.id == "gorou" then
         pet.sell = function(done)
             game.itemShop.stock("donutgun" .. pet.level,true);
             done();
         end
-        pet.abilityText = {
-            "Sell: Stock one Donut Gun.",
-            "Sell: Stock one Donut Gun with double effect.",
-            "Sell: Stock one Donut Gun with triple effect."
-        }
         pet.abilities = ArrayFromRawArray({{id="sell",func = pet.sell}})
-    elseif pet.id == "molly" then
-        pet.abilityText = {
-            "Molly can't receive perks or ailments. Existing perks and ailments have no effect.",
-            "Molly and adjacent pets can't receive perks/ailments. Existing perks and ailments have no effect.",
-            "Molly and pets within two spaces can't receive perks/ailments. Existing perks and ailments have no effect."
-        }
     elseif pet.id == "simphony" then
         pet.friendFaints = function(done,friend)
             game.manager.animateThrow(pet,pet,"img/heart.png",function()
@@ -297,11 +250,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end)
         end
-        pet.abilityText = {
-            "Friend faints: Gain 1 HP.",
-            "Friend faints: Gain 3 HP.",
-            "Friend faints: Gain 5 HP."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendFaints",func = pet.friendFaints}})
     elseif pet.id == "spike" then
         pet.hurt = function(done,sourceAndAmount)
@@ -314,11 +262,6 @@ giveAbilitiesToPet = function(pet)
             end
             game.manager.battle.dealDirectDamage(amount,pet,sourceAndAmount.source,done);
         end
-        pet.abilityText = {
-            "Hurt: Deal 1 damage to attacker.",
-            "Hurt: Deal 3 damage to attacker.",
-            "Hurt: Deal 6 damage to attacker."
-        }
         pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
     elseif pet.id == "feenie" then
         pet.spentGoldPastTen = function(done,gold)
@@ -331,11 +274,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end);
         end
-        pet.abilityText = {
-            "Spent gold past 10: Give that much health to a Random teammate.",
-            "Spent gold past 10: Give twice that much health to a Random teammate.",
-            "Spent gold past 10: Give three times that much health to a Random teammate."
-        }
         pet.abilities = ArrayFromRawArray({{id="spentGoldPastTen",func=pet.spentGoldPastTen}});
     elseif pet.id == "bugsy" then
         pet.ateFood = function(done,tier)
@@ -344,11 +282,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end);
         end
-        pet.abilityText = {
-            "Ate food: Gain attack equal to its tier until next turn.",
-            "Ate food: Gain attack equal to twice its tier until next turn.",
-            "Ate food: Gain attack equal to three times its tier until next turn."
-        }
         pet.abilities = ArrayFromRawArray({{id="ateFood",func=pet.ateFood}});
     elseif pet.id == "gacha" then
         pet.friendSold = function(done,friend) 
@@ -358,11 +291,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end);
         end
-        pet.abilityText = {
-            "Friend sold: Gain 1 attack and 1 health.",
-            "Friend sold: Gain 2 attack and 2 health.",
-            "Friend sold: Gain 3 attack and 3 health."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendSold",func=pet.friendSold}});
     elseif pet.id == "darkstar" then
         pet.faint = function(done)
@@ -401,11 +329,6 @@ giveAbilitiesToPet = function(pet)
             game.manager.triggerRandom();
             done();
         end
-        pet.abilityText = {
-            "Faint: Randomly (1/6 chance) summon an additional 4/1 Darkstar.",
-            "Faint: Randomly (1/3 chance) summon an additional 6/3 Darkstar at level 1.",
-            "Faint: Randomly (1/2 chance) summon an additional 9/6 Darkstar at level 2."
-        }
         pet.abilities = ArrayFromRawArray({{id="faint",func=pet.faint}});
     elseif pet.id == "crusher" then
         pet.endOfTurn = function(done)
@@ -420,11 +343,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "End of turn: Give friend ahead 2 health.",
-            "End of turn: Give friend ahead 4 health.",
-            "End of turn: Give friend ahead 6 health."
-        }
         pet.abilities = ArrayFromRawArray({{id="endOfTurn",func=pet.endOfTurn}});
     elseif pet.id == "mera" then
         pet.projectileUrl = "img/perk/fragile.png";
@@ -454,11 +372,6 @@ giveAbilitiesToPet = function(pet)
             end
             asyn.runSerial(fragFuncs,finishFrags);
         end
-        pet.abilityText = {
-            "Hurt: Apply Fragile to self and first enemy ahead.",
-            "Hurt: Apply Fragile to self and first two enemies ahead.",
-            "Hurt: Apply Fragile to self and first three enemies ahead."
-        }
         pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
     elseif pet.id == "stink" then
         pet.projectileUrl = "img/cursedsword.png";
@@ -498,11 +411,6 @@ giveAbilitiesToPet = function(pet)
                 end
             end
         end
-        pet.abilityText = {
-            "Start of battle: Deal 4 damage to a Random enemy Girl and inflict Cursed.",
-            "Start of battle: Deal 8 damage to a Random enemy Girl and inflict Cursed.",
-            "Start of battle: Deal 12 damage to a Random enemy Girl and inflict Cursed."
-        }
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func=pet.startOfBattle}});
     elseif pet.id == "poochy" then
         pet.triggersCount = 0;
@@ -523,11 +431,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Two friends attack: Gain 1 Odd Trumpet.",
-            "Two friends attack: Gain 2 Odd Trumpets.",
-            "Two friends attack: Gain 3 Odd Trumpets."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendAttacks",func=pet.friendAttacks}});
     elseif pet.id == "naven" then
         pet.friendAteFood = function(done,food)
@@ -540,11 +443,6 @@ giveAbilitiesToPet = function(pet)
                 end);
             end
         end
-        pet.abilityText = {
-            "Friend ate apple: Gain 1 attack and health, and gain 1 gold next turn.",
-            "Friend ate apple: Gain 2 attack and health, and gain 2 gold next turn.",
-            "Friend ate apple: Gain 3 attack and health, and gain 3 gold next turn."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendAteFood",func=pet.friendAteFood}});
     elseif pet.id == "umby" then
         pet.friendHurt = function(done,friendAndSource)
@@ -556,11 +454,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Any friend behind hurt: Deal 3 damage to the attacker.",
-            "Any friend behind hurt: Deal 6 damage to the attacker.",
-            "Any friend behind hurt: Deal 9 damage to the attacker."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendHurt",func=pet.friendHurt}});
     elseif pet.id == "espy" then
         pet.friendHurt = function(done,friendAndSource)
@@ -572,11 +465,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Any friend ahead hurt: Deal 1 damage to the attacker.",
-            "Any friend ahead hurt: Deal 2 damage to the attacker.",
-            "Any friend ahead hurt: Deal 3 damage to the attacker."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendHurt",func=pet.friendHurt}});
     elseif pet.id == "sylvie" then
         pet.beeftonSummoned = false;
@@ -594,18 +482,7 @@ giveAbilitiesToPet = function(pet)
                 pet.getTeam().summonPetAheadOf(pet,beefton,done);
             end
         end
-        pet.abilityText = {
-            "First time hurt: Summon a 5/5 Dr. Beefton ahead.",
-            "First time hurt: Summon a 10/10 Dr. Beefton ahead.",
-            "First time hurt: Summon a 15/15 Dr. Beefton ahead."
-        }
         pet.abilities = ArrayFromRawArray({{id="hurt",func=pet.hurt}});
-    elseif pet.id == "beefton" then
-        pet.abilityText = {
-            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics.",
-            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics.",
-            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics."
-        }
     elseif pet.id == "scaregrow" then
         pet.startOfBattle = function(done)
             local targets = game.manager.battle.allPets();
@@ -633,11 +510,6 @@ giveAbilitiesToPet = function(pet)
             game.manager.triggerRandom();
             asyn.runSerial(cobFuncs,done);
         end
-        pet.abilityText = {
-            "Start of battle: Feed 4 corncobs to Random pets. Double effect on allies.",
-            "Start of battle: Feed 6 corncobs to Random pets. Triple effect on allies.",
-            "Start of battle: Feed 8 corncobs to Random pets. Quadruple effect on allies."
-        }
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func=pet.startOfBattle}});
     elseif pet.id == "howdy" then
         pet.startOfTurn = function(done)
@@ -645,11 +517,6 @@ giveAbilitiesToPet = function(pet)
             game.manager.triggerRandom();
             done();
         end
-        pet.abilityText = {
-            "Start of turn: Stock an additional Random food and apply a 1-gold senior discount.",
-            "Start of turn: Stock an additional Random food and apply a 2-gold senior discount.",
-            "Start of turn: Stock an additional Random food and apply a 3-gold senior discount."
-        }
         pet.abilities = ArrayFromRawArray({{id="startOfTurn",func = pet.startOfTurn}})
     elseif pet.id == "percy" then
         pet.alreadySummoned = false;
@@ -665,29 +532,13 @@ giveAbilitiesToPet = function(pet)
             end
             done();
         end
-        pet.abilityText = {
-            "Empty back space: Summon a 1/5 Wizard Tower. Triggers once per battle.",
-            "Empty back space: Summon a 1/15 Wizard Tower. Triggers once per battle.",
-            "Empty back space: Summon a 1/30 Wizard Tower. Triggers once per battle."
-        };
         pet.abilities = ArrayFromRawArray({{id="emptyBackSpace",func = pet.emptyBackSpace}})
-    elseif pet.id == "wizardtower" then
-        pet.abilityText = {
-            "Enemy ability targeted randomly: Redirect it to this tower.",
-            "Enemy ability targeted randomly: Redirect it to this tower.",
-            "Enemy ability targeted randomly: Redirect it to this tower."
-        };
     elseif pet.id == "arnold" then
         pet.boughtFood = function(done,food)
             game.itemShop.applyGlobalDiscount(pet.level);
             game.petShop.applyGrahamDiscount(pet.level);
             done();
         end
-        pet.abilityText = {
-            "Bought food: Discount shop food by 1.",
-            "Bought food: Discount shop food by 2.",
-            "Bought food: Discount shop food by 3.",
-        }
         pet.abilities = ArrayFromRawArray({{id="boughtFood",func = pet.boughtFood}})
     elseif pet.id == "trefor" then
         pet.startOfBattle = function(done)
@@ -728,11 +579,6 @@ giveAbilitiesToPet = function(pet)
             end
             asyn.runSerial(quagFuncs,finishQuags);
         end
-        pet.abilityText = {
-            "Start of battle: Gain Quag. (Quag is both a perk and an ailment.)",
-            "Start of battle: Self and adjacent perkless friends gain Quag. (Quag is both a perk and an ailment.)",
-            "Start of battle: Self and all perkless friends gain Quag. (Quag is both a perk and an ailment.)"
-        }
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "ramsey" then
         pet.goldbrickeredYet = false;
@@ -752,11 +598,6 @@ giveAbilitiesToPet = function(pet)
             end
             done();
         end
-        pet.abilityText = {
-            "Sell or friend sold: Gain 5 gold. Lose that much next turn. Triggers once per turn.",
-            "Sell or friend sold: Gain 10 gold. Lose that much next turn. Triggers once per turn.",
-            "Sell or friend sold: Gain 15 gold. Lose that much next turn. Triggers once per turn."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendSold",func=pet.friendSold}});
     elseif pet.id == "carcrash" then
         pet.startOfBattle = function(done)
@@ -784,18 +625,7 @@ giveAbilitiesToPet = function(pet)
             team.replacePet(spot,bus);
             done();
         end
-        pet.abilityText = {
-            "Start of battle: Faint and summon a 6/4 Beat-up Bus with Too Hot.",
-            "Start of battle: Faint and summon a 12/8 Beat-up Bus with Too Hot.",
-            "Start of battle: Faint and summon a 18/12 Beat-up Bus with Too Hot."
-        };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
-    elseif pet.id == "bus" then
-        pet.abilityText = {
-            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
-            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
-            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights."
-        }
     elseif pet.id == "spellingbee" then
         pet.beforeAttack = function(done,opponent)
             local enemyIsAlphabetical = game.enemyTeam.isInAlphabeticalOrder();
@@ -822,12 +652,21 @@ giveAbilitiesToPet = function(pet)
             end
             asyn.runSerial(damageActions,done);
         end
-        pet.abilityText = {
-            "Before attack: If either team is out of alphabetical order, deal 1 damage to that team.",
-            "Before attack: If either team is out of alphabetical order, deal 2 damage to that team.",
-            "Before attack: If either team is out of alphabetical order, deal 3 damage to that team.",
-        };
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
+    elseif pet.id == "wailmer" then
+        pet.faint = function(done)
+            if game.manager.battle then
+                local pickedTier = math.random(6);
+                local idsAvailable = PetTiers[pickedTier];
+                local petId = idsAvailable[math.random(#idsAvailable)];
+                pet.original.wailmer = true;
+                pet.original.transform(petId);
+                done();
+            else
+                done();
+            end
+        end
+        pet.abilities = ArrayFromRawArray({{id="faint",func=pet.faint}})
     elseif pet.id == "indus" then
         pet.startOfBattle = function(done)
             local perk = Perk();
@@ -855,11 +694,6 @@ giveAbilitiesToPet = function(pet)
                 end)
             end
         end
-        pet.abilityText = {
-            "Start of battle: Give Pepper to self and friend ahead.",
-            "Start of battle: Give Melon to self and friend ahead.",
-            "Start of battle: Give Coconut to self and friend ahead."
-        };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "yoomtah" then
         pet.projectileUrl = "img/lightning.png";
@@ -884,11 +718,6 @@ giveAbilitiesToPet = function(pet)
                 game.manager.battle.dealDirectDamage(dmg,pet,target,done);
             end
         end
-        pet.abilityText = {
-            "Something Random happens: Zap a (lowercase-r) random enemy for 1 damage.",
-            "Something Random happens: Zap a (lowercase-r) random enemy for 2 damage.",
-            "Something Random happens: Zap a (lowercase-r) random enemy for 3 damage."
-        };
         pet.abilities = ArrayFromRawArray({{id="randomThingHappens",func = pet.randomThingHappens}})
     elseif pet.id == "weh" then
         pet.beforeBattle = function(done)
@@ -905,11 +734,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Before battle: If no adjacent friends, gain 6 attack and HP.",
-            "Before battle: If no adjacent friends, gain 12 attack and HP.",
-            "Before battle: If no adjacent friends, gain 18 attack and HP."
-        };
         pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
     elseif pet.id == "howie" then
         pet.friendGainedAilment = function(done,friend)
@@ -920,11 +744,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end);
         end
-        pet.abilityText = {
-            "Friend gained ailment: Replace it with Honeyed Snack and give +1 attack.",
-            "Friend gained ailment: Replace it with Honeyed Snack and give +2 attack.",
-            "Friend gained ailment: Replace it with Honeyed Snack and give +3 attack."
-        };
         pet.abilities = ArrayFromRawArray({{id="friendGainedAilment",func = pet.friendGainedAilment}})
     elseif pet.id == "tannenbaum" then
         pet.falseSwipesUsed = 0;
@@ -942,11 +761,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Before attack: Gain 2 HP and give the opponent Pepper. Triggers 2 times per battle.",
-            "Before attack: Gain 4 HP and give the opponent Pepper. Triggers 4 times per battle.",
-            "Before attack: Gain 6 HP and give the opponent Pepper. Triggers 6 times per battle."
-        };
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
     elseif pet.id == "exit" then
         pet.beforeBattle = function(done)
@@ -974,11 +788,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Before battle: If no adjacent friends, gain 6 attack and HP.",
-            "Before battle: If no adjacent friends, gain 12 attack and HP.",
-            "Before battle: If no adjacent friends, gain 18 attack and HP."
-        };
         pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
     elseif pet.id == "justy" then
         pet.defaultDefense = pet.defense;
@@ -995,11 +804,6 @@ giveAbilitiesToPet = function(pet)
             game.manager.triggerRandom();
             done();
         end
-        pet.abilityText = {
-            "1/6 chance to evade an enemy attack.",
-            "1/3 chance to evade an enemy attack.",
-            "1/2 chance to evade an enemy attack. He's perfected the Double Team technique...!"
-        };
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack},{id="afterAttack",func = pet.afterAttack}})
     elseif pet.id == "jorge" then
         pet.beforeBattle = function(done)
@@ -1009,11 +813,6 @@ giveAbilitiesToPet = function(pet)
             game.manager.triggerRandom();
             done();
         end
-        pet.abilityText = {
-            "Before battle: Randomly transform into a level 1 Vampire Bat, Parrot, or Squid.",
-            "Before battle: Randomly transform into a level 2 Vampire Bat, Parrot, or Squid.",
-            "Before battle: Randomly transform into a level 3 Vampire Bat, Parrot, or Squid."
-        };
         pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
     elseif pet.id == "vampireparrot" then
         pet.startOfBattle = function(done)
@@ -1034,11 +833,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Start of battle: Gain 1 HP and 2 attack for each unique friendly ailment.",
-            "Start of battle: Gain 2 HP and 4 attack for each unique friendly ailment.",
-            "Start of battle: Gain 3 HP and 6 attack for each unique friendly ailment."
-        };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "vampirebat" then
         pet.vampTriggerCount = 0;
@@ -1061,11 +855,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Enemy gained ailment: Deal 4 damage to it and gain damage as HP. Works twice per battle.",
-            "Enemy gained ailment: Deal 8 damage to it and gain damage as HP. Works twice per battle.",
-            "Enemy gained ailment: Deal 12 damage to it and gain damage as HP. Works twice per battle."
-        };
         pet.abilities = ArrayFromRawArray({{id="opponentGainedAilment",func = pet.opponentGainedAilment}})
     elseif pet.id == "vampiresquid" then
         pet.startOfBattle = function(done)
@@ -1094,11 +883,6 @@ giveAbilitiesToPet = function(pet)
             end);
             asyn.runSerial(buffFuncs,done);
         end
-        pet.abilityText = {
-            "Start of battle: Permanently give 1 attack and 2 HP to each friend with a different ailment.",
-            "Start of battle: Permanently give 2 attack and 4 HP to each friend with a different ailment.",
-            "Start of battle: Permanently give 3 attack and 6 HP to each friend with a different ailment."
-        };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
     elseif pet.id == "jolteon" then
         pet.friendFaints = function(done,friend)
@@ -1131,11 +915,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Friend faints: Gain Peanut Butter.",
-            "Friend hurt: Gain Peanut Butter.",
-            "Friend hurt: Gain Peanut Butter, and 10 HP if it didn't have Peanut Butter beforehand."
-        }
         pet.abilities = ArrayFromRawArray({{id="friendFaints",func = pet.friendFaints},{id="friendHurt",func = pet.friendHurt}})
     elseif pet.id == "zora" then
         pet.afterAttack = function(done,opponent)
@@ -1146,11 +925,6 @@ giveAbilitiesToPet = function(pet)
             game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + 1;
             done();
         end
-        pet.abilityText = {
-            "After attack: Remove 1 EXP from the opponent and gain 1 gold.",
-            "After attack: Remove 2 EXP from the opponent and gain 1 gold.",
-            "After attack: Remove 4 EXP from the opponent and gain 1 gold."
-        };
         pet.abilities = ArrayFromRawArray({{id="afterAttack",func = pet.afterAttack}})
     elseif pet.id == "trixie" then
         pet.startOfBattle = function(done)
@@ -1185,18 +959,7 @@ giveAbilitiesToPet = function(pet)
                 game.abilityStack.startProcessing(done);
             end);
         end
-        pet.abilityText = {
-            "Start of battle: Apply a Random tier 2 or lower ailment to the 2 nearest enemies and self.",
-            "Start of battle: Apply a Random tier 4 or lower ailment to the 3 nearest enemies and self.",
-            "Start of battle: Apply a Random tier 6 or lower ailment to the 4 nearest enemies and self."
-        };
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle}})
-    elseif pet.id == "graham" then
-        pet.abilityText = {
-            "Eaten: Eater gains 3 attack and 3 HP.",
-            "Eaten: Eater gains 10 attack and 10 HP.",
-            "Eaten: Eater gains this pet's attack and HP."
-        };
     elseif pet.id == "greenpikachu" then
         pet.beforeBattle = function(done)
             local mates = pet.getTeammates();
@@ -1227,11 +990,6 @@ giveAbilitiesToPet = function(pet)
                 pet.gainPerk(ExtremelySpookedAilment(),done);
             end)
         end
-        pet.abilityText = {
-            "Before battle: Transform into the highest-tier friend and gain Extremely Spooked.",
-            "Before battle: Transform into the highest-tier friend (including their attack, if higher) and gain Extremely Spooked.",
-            "Before battle: Transform into the highest-tier friend (including their attack and HP, if higher) and gain Extremely Spooked.",
-        };
         pet.abilities = ArrayFromRawArray({{id="beforeBattle",func = pet.beforeBattle}})
     elseif pet.id == "wound" then
         pet.beforeBattle = function(done)
@@ -1256,11 +1014,6 @@ giveAbilitiesToPet = function(pet)
                 done();
             end
         end
-        pet.abilityText = {
-            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet.",
-            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet.",
-            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet."
-        }
         pet.abilities = ArrayFromRawArray({{id="startOfBattle",func = pet.startOfBattle},{id="beforeBattle",func = pet.beforeBattle}})
     elseif pet.id == "lorelai" then
         if not pet.oldDefense then
@@ -1273,11 +1026,6 @@ giveAbilitiesToPet = function(pet)
                 return pet.oldDefense();
             end
         end
-        pet.abilityText = {
-            "If not in front: Takes 10 less damage and can't gain ailments.",
-            "If not in front: Takes 20 less damage and can't gain ailments.",
-            "If not in front: Takes 30 less damage and can't gain ailments."
-        }
     elseif pet.id == "rick" then
         pet.allAbilities = function()
             local finalStack = Array();
@@ -1319,8 +1067,341 @@ giveAbilitiesToPet = function(pet)
             "Has all abilities of all friends at level 2.",
             "Has all abilities of all friends at level 3.",
         }
-    elseif pet.id == "craig" then
-        pet.abilityText = {
+    end
+end
+getAbilityText = function(id)
+    if id == "ben" then
+        return {
+            "Before battle: Randomly leaves (1/2 chance).",
+            "Before battle: Randomly leaves (1/3 chance).",
+            "Before battle: Randomly leaves (1/6 chance)."
+        }
+    elseif id == "crapgorps" then
+        return {
+            "Start of battle: Gain 1 health for each 2 battles fought.",
+            "Start of battle: Gain 1 health for each battle fought.",
+            "Start of battle: Gain 2 health for each battle fought."
+        }
+    elseif id == "giovanni" then
+        return {
+            "Start of turn: Stock a Random soup up to tier 2.",
+            "Start of turn: Stock a Random soup up to tier 4.",
+            "Start of turn: Stock a Random soup up to tier 6."
+        }
+    elseif id == "flamethrower" then
+        return {
+            "Before attack: Give Toasty to the first enemy ahead.",
+            "Before attack: Give Toasty to the first two enemies ahead.",
+            "Before attack: Give Toasty to the first three enemies ahead."
+        }
+    elseif id == "martin" then
+        return {
+            "Friend gained ailment: Gain 1 gold next turn.",
+            "Friend gained ailment: Gain 2 gold next turn.",
+            "Friend gained ailment: Gain 3 gold next turn.",
+        }
+    elseif id == "gansley" then
+        return {
+            "Before attack: Deal between 1 and 3 damage to self or enemy ahead, Randomly.",
+            "Before attack: Deal between 1 and 8 damage to self or enemy ahead, Randomly.",
+            "Before attack: Deal between 1 and 20 damage to self or enemy ahead, Randomly."
+        }
+    elseif id == "wellwatcher" then
+        return {
+            "Start of battle: Gain 1 gold, faint, and summon a copy which takes 3 damage and turns into Sky Watcher.",
+            "Start of battle: Gain 2 gold, faint, and summon a copy which takes 6 damage and turns into Sky Watcher.",
+            "Start of battle: Gain 3 gold, faint, and summon a copy which takes 10 damage and turns into Sky Watcher."
+        }
+    elseif id == "skywatcher" then
+        return {
+            "Something flew overhead: Gain 1 attack and HP.",
+            "Something flew overhead: Gain 2 attack and HP.",
+            "Something flew overhead: Gain 3 attack and HP."
+        }
+    elseif id == "gorou" then
+        return {
+            "Sell: Stock one Donut Gun.",
+            "Sell: Stock one Donut Gun with double effect.",
+            "Sell: Stock one Donut Gun with triple effect."
+        }
+    elseif id == "molly" then
+        return {
+            "Molly can't receive perks or ailments. Existing perks and ailments have no effect.",
+            "Molly and adjacent pets can't receive perks/ailments. Existing perks and ailments have no effect.",
+            "Molly and pets within two spaces can't receive perks/ailments. Existing perks and ailments have no effect."
+        }
+    elseif id == "simphony" then
+        return {
+            "Friend faints: Gain 1 HP.",
+            "Friend faints: Gain 3 HP.",
+            "Friend faints: Gain 5 HP."
+        }
+    elseif id == "spike" then
+        return {
+            "Hurt: Deal 1 damage to attacker.",
+            "Hurt: Deal 3 damage to attacker.",
+            "Hurt: Deal 6 damage to attacker."
+        }
+    elseif id == "feenie" then
+        return {
+            "Spent gold past 10: Give that much health to a Random teammate.",
+            "Spent gold past 10: Give twice that much health to a Random teammate.",
+            "Spent gold past 10: Give three times that much health to a Random teammate."
+        }
+    elseif id == "bugsy" then
+        return {
+            "Ate food: Gain attack equal to its tier until next turn.",
+            "Ate food: Gain attack equal to twice its tier until next turn.",
+            "Ate food: Gain attack equal to three times its tier until next turn."
+        }
+    elseif id == "gacha" then
+        return {
+            "Friend sold: Gain 1 attack and 1 health.",
+            "Friend sold: Gain 2 attack and 2 health.",
+            "Friend sold: Gain 3 attack and 3 health."
+        }
+    elseif id == "darkstar" then
+        return {
+            "Faint: Randomly (1/6 chance) summon an additional 4/1 Darkstar.",
+            "Faint: Randomly (1/3 chance) summon an additional 6/3 Darkstar at level 1.",
+            "Faint: Randomly (1/2 chance) summon an additional 9/6 Darkstar at level 2."
+        }
+    elseif id == "crusher" then
+        return {
+            "End of turn: Give friend ahead 2 health.",
+            "End of turn: Give friend ahead 4 health.",
+            "End of turn: Give friend ahead 6 health."
+        }
+    elseif id == "mera" then
+        return {
+            "Hurt: Apply Fragile to self and first enemy ahead.",
+            "Hurt: Apply Fragile to self and first two enemies ahead.",
+            "Hurt: Apply Fragile to self and first three enemies ahead."
+        }
+    elseif id == "stink" then
+        return {
+            "Start of battle: Deal 4 damage to a Random enemy Girl and inflict Cursed.",
+            "Start of battle: Deal 8 damage to a Random enemy Girl and inflict Cursed.",
+            "Start of battle: Deal 12 damage to a Random enemy Girl and inflict Cursed."
+        }
+    elseif id == "poochy" then
+        return {
+            "Two friends attack: Gain 1 Odd Trumpet.",
+            "Two friends attack: Gain 2 Odd Trumpets.",
+            "Two friends attack: Gain 3 Odd Trumpets."
+        }
+    elseif id == "naven" then
+        return {
+            "Friend ate apple: Gain 1 attack and health, and gain 1 gold next turn.",
+            "Friend ate apple: Gain 2 attack and health, and gain 2 gold next turn.",
+            "Friend ate apple: Gain 3 attack and health, and gain 3 gold next turn."
+        }
+    elseif id == "umby" then
+        return {
+            "Any friend behind hurt: Deal 3 damage to the attacker.",
+            "Any friend behind hurt: Deal 6 damage to the attacker.",
+            "Any friend behind hurt: Deal 9 damage to the attacker."
+        }
+    elseif id == "espy" then
+        return {
+            "Any friend ahead hurt: Deal 1 damage to the attacker.",
+            "Any friend ahead hurt: Deal 2 damage to the attacker.",
+            "Any friend ahead hurt: Deal 3 damage to the attacker."
+        }
+    elseif id == "sylvie" then
+        return {
+            "First time hurt: Summon a 5/5 Dr. Beefton ahead.",
+            "First time hurt: Summon a 10/10 Dr. Beefton ahead.",
+            "First time hurt: Summon a 15/15 Dr. Beefton ahead."
+        }
+    elseif id == "beefton" then
+        return {
+            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics.",
+            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics.",
+            "DOCTOR BEEFTON HAS A PhD IN DEATH! As well as a doctorate in philosophy and modern linguistics."
+        }
+    elseif id == "scaregrow" then
+        return {
+            "Start of battle: Feed 4 corncobs to Random pets. Double effect on allies.",
+            "Start of battle: Feed 6 corncobs to Random pets. Triple effect on allies.",
+            "Start of battle: Feed 8 corncobs to Random pets. Quadruple effect on allies."
+        }
+    elseif id == "howdy" then
+        return {
+            "Start of turn: Stock an additional Random food and apply a 1-gold senior discount.",
+            "Start of turn: Stock an additional Random food and apply a 2-gold senior discount.",
+            "Start of turn: Stock an additional Random food and apply a 3-gold senior discount."
+        }
+    elseif id == "percy" then
+        return {
+            "Empty back space: Summon a 1/5 Wizard Tower. Triggers once per battle.",
+            "Empty back space: Summon a 1/15 Wizard Tower. Triggers once per battle.",
+            "Empty back space: Summon a 1/30 Wizard Tower. Triggers once per battle."
+        }
+    elseif id == "wizardtower" then
+        return {
+            "Enemy ability targeted randomly: Redirect it to this tower.",
+            "Enemy ability targeted randomly: Redirect it to this tower.",
+            "Enemy ability targeted randomly: Redirect it to this tower."
+        }
+    elseif id == "arnold" then
+        return {
+            "Bought food: Discount shop food by 1.",
+            "Bought food: Discount shop food by 2.",
+            "Bought food: Discount shop food by 3.",
+        }
+    elseif id == "trefor" then
+        return {
+            "Start of battle: Gain Quag. (Quag is both a perk and an ailment.)",
+            "Start of battle: Self and adjacent perkless friends gain Quag. (Quag is both a perk and an ailment.)",
+            "Start of battle: Self and all perkless friends gain Quag. (Quag is both a perk and an ailment.)"
+        }
+    elseif id == "ramsey" then
+        return {
+            "Sell or friend sold: Gain 5 gold. Lose that much next turn. Triggers once per turn.",
+            "Sell or friend sold: Gain 10 gold. Lose that much next turn. Triggers once per turn.",
+            "Sell or friend sold: Gain 15 gold. Lose that much next turn. Triggers once per turn."
+        }
+    elseif id == "carcrash" then
+        return {
+            "Start of battle: Faint and summon a 6/4 Beat-up Bus with Too Hot.",
+            "Start of battle: Faint and summon a 12/8 Beat-up Bus with Too Hot.",
+            "Start of battle: Faint and summon a 18/12 Beat-up Bus with Too Hot."
+        };
+    elseif id == "bus" then
+        return {
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights.",
+            "It stares with blank eyes. Eyes one might compare... to headlights. They're headlights."
+        }
+    elseif id == "spellingbee" then
+        return {
+            "Before attack: If either team is out of alphabetical order, deal 1 damage to that team.",
+            "Before attack: If either team is out of alphabetical order, deal 2 damage to that team.",
+            "Before attack: If either team is out of alphabetical order, deal 3 damage to that team.",
+        };
+    elseif id == "wailmer" then
+        return {
+            "Faint: Permanently transform into a random pet.",
+            "Faint: Permanently transform into a random pet.",
+            "Faint: Permanently transform into a random pet."
+        };
+    elseif id == "indus" then
+        return {
+            "Start of battle: Give Pepper to self and friend ahead.",
+            "Start of battle: Give Melon to self and friend ahead.",
+            "Start of battle: Give Coconut to self and friend ahead."
+        }
+    elseif id == "yoomtah" then
+        return {
+            "Something Random happens: Zap a (lowercase-r) random enemy for 1 damage.",
+            "Something Random happens: Zap a (lowercase-r) random enemy for 2 damage.",
+            "Something Random happens: Zap a (lowercase-r) random enemy for 3 damage."
+        }
+    elseif id == "weh" then
+        return {
+            "Before battle: If no adjacent friends, gain 6 attack and HP.",
+            "Before battle: If no adjacent friends, gain 12 attack and HP.",
+            "Before battle: If no adjacent friends, gain 18 attack and HP."
+        };
+    elseif id == "howie" then
+        return {
+            "Friend gained ailment: Replace it with Honeyed Snack and give +1 attack.",
+            "Friend gained ailment: Replace it with Honeyed Snack and give +2 attack.",
+            "Friend gained ailment: Replace it with Honeyed Snack and give +3 attack."
+        }
+    elseif id == "tannenbaum" then
+        return {
+            "Before attack: Gain 2 HP and give the opponent Pepper. Triggers 2 times per battle.",
+            "Before attack: Gain 4 HP and give the opponent Pepper. Triggers 4 times per battle.",
+            "Before attack: Gain 6 HP and give the opponent Pepper. Triggers 6 times per battle."
+        }
+    elseif id == "exit" then
+        return {
+            "Before battle: If no adjacent friends, gain 6 attack and HP.",
+            "Before battle: If no adjacent friends, gain 12 attack and HP.",
+            "Before battle: If no adjacent friends, gain 18 attack and HP."
+        }
+    elseif id == "justy" then
+        return {
+            "1/6 chance to evade an enemy attack.",
+            "1/3 chance to evade an enemy attack.",
+            "1/2 chance to evade an enemy attack. He's perfected the Double Team technique...!"
+        }
+    elseif id == "jorge" then
+        return {
+            "Before battle: Randomly transform into a level 1 Vampire Bat, Parrot, or Squid.",
+            "Before battle: Randomly transform into a level 2 Vampire Bat, Parrot, or Squid.",
+            "Before battle: Randomly transform into a level 3 Vampire Bat, Parrot, or Squid."
+        }
+    elseif id == "vampireparrot" then
+        return {
+            "Start of battle: Gain 1 HP and 2 attack for each unique friendly ailment.",
+            "Start of battle: Gain 2 HP and 4 attack for each unique friendly ailment.",
+            "Start of battle: Gain 3 HP and 6 attack for each unique friendly ailment."
+        }
+    elseif id == "vampirebat" then
+        return {
+            "Enemy gained ailment: Deal 4 damage to it and gain damage as HP. Works twice per battle.",
+            "Enemy gained ailment: Deal 8 damage to it and gain damage as HP. Works twice per battle.",
+            "Enemy gained ailment: Deal 12 damage to it and gain damage as HP. Works twice per battle."
+        }
+    elseif id == "vampiresquid" then
+        return {
+            "Start of battle: Permanently give 1 attack and 2 HP to each friend with a different ailment.",
+            "Start of battle: Permanently give 2 attack and 4 HP to each friend with a different ailment.",
+            "Start of battle: Permanently give 3 attack and 6 HP to each friend with a different ailment."
+        }
+    elseif id == "jolteon" then
+        return {
+            "Friend faints: Gain Peanut Butter.",
+            "Friend hurt: Gain Peanut Butter.",
+            "Friend hurt: Gain Peanut Butter, and 10 HP if it didn't have Peanut Butter beforehand."
+        }
+    elseif id == "zora" then
+        return {
+            "After attack: Remove 1 EXP from the opponent and gain 1 gold.",
+            "After attack: Remove 2 EXP from the opponent and gain 1 gold.",
+            "After attack: Remove 4 EXP from the opponent and gain 1 gold."
+        }
+    elseif id == "trixie" then
+        return {
+            "Start of battle: Apply a Random tier 2 or lower ailment to the 2 nearest enemies and self.",
+            "Start of battle: Apply a Random tier 4 or lower ailment to the 3 nearest enemies and self.",
+            "Start of battle: Apply a Random tier 6 or lower ailment to the 4 nearest enemies and self."
+        }
+    elseif id == "graham" then
+        return {
+            "Eaten: Eater gains 3 attack and 3 HP.",
+            "Eaten: Eater gains 10 attack and 10 HP.",
+            "Eaten: Eater gains this pet's attack and HP."
+        }
+    elseif id == "greenpikachu" then
+        return {
+            "Before battle: Transform into the highest-tier friend and gain Extremely Spooked.",
+            "Before battle: Transform into the highest-tier friend (including their attack, if higher) and gain Extremely Spooked.",
+            "Before battle: Transform into the highest-tier friend (including their attack and HP, if higher) and gain Extremely Spooked.",
+        }
+    elseif id == "wound" then
+        return {
+            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet.",
+            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet.",
+            "Start of battle: If this had no adjacent pets before battle, and wasn't in the back, steal the rearmost enemy pet."
+        }
+    elseif id == "lorelai" then
+        return {
+            "If not in front: Takes 10 less damage and can't gain ailments.",
+            "If not in front: Takes 20 less damage and can't gain ailments.",
+            "If not in front: Takes 30 less damage and can't gain ailments."
+        }
+    elseif id == "rick" then
+        return {
+            "Has all abilities of all friends at level 1.",
+            "Has all abilities of all friends at level 2.",
+            "Has all abilities of all friends at level 3.",
+        }
+    elseif id == "craig" then
+        return {
             "Please: KILL ME!!!",
             "WHY AM I NOT DEAD!!!",
             "I YEARN FOR THE SWEET EMBRACE OF OBLIVION!!!"

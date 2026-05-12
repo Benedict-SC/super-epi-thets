@@ -3,13 +3,18 @@ Game = function()
     game.field = Field();
     game.run = Run();
     game.manager = Manager();
+    game.manager.ribbonscreen.load();
     game.petShop = PetShop();
     game.itemShop = ItemShop();
     game.abilityStack = AbilityStack();
 
     game.team = Team();
     game.endscreen = EndScreen();
-    --[[game.team.addNewPet("darkstar");
+    --[[game.team.addNewPet("wailmer");
+    game.team.addNewPet("wailmer");
+    game.team.addNewPet("wailmer");
+    game.team.addNewPet("wailmer");
+    game.team.addNewPet("wailmer");
     game.team.get(1).addExp(2);
     game.team.get(1).addExp(3);
     local mem1 = game.team.get(1);

@@ -15,6 +15,8 @@ Manager = function()
     };
     mng.dragThreshold = 8;
 
+    mng.ribbonscreen = Ribbons();
+
     mng.sellButton = Button("img/sell.png");
     mng.sellButton.x = 560;
     mng.sellButton.y = 10;
@@ -54,6 +56,12 @@ Manager = function()
             game.petShop.roll(game.run.tier);
             game.itemShop.roll(game.run.tier);
         end
+    end
+    mng.pawButton = Button("img/pawbutton.png");
+    mng.pawButton.x = 950;
+    mng.pawButton.y = 10;
+    mng.pawButton.onClick = function()
+        mng.showRibbons();
     end
 
     mng.endButton = Button("img/end.png");
@@ -282,7 +290,7 @@ Manager = function()
         mng.cleanupDrag();
     end
     mng.updateInput = function()
-        if (mng.hideUI and (mng.state ~= "ENDING")) or (mng.state ~= "SHOP" and mng.state ~= "BATTLE" and mng.state ~= "ANIMATE" and mng.state ~= "ENDING") then
+        if (mng.hideUI and (mng.state ~= "ENDING")) or (mng.state ~= "SHOP" and mng.state ~= "RIBBON" and mng.state ~= "BATTLE" and mng.state ~= "ANIMATE" and mng.state ~= "ENDING") then
             mng.setHovered(nil);
             mng.pointer.pressed = nil;
             mng.pointer.rightPressed = nil;
@@ -464,21 +472,34 @@ Manager = function()
         mng.emptySlots = Array();
     end
 
+    mng.showRibbons = function()
+        mng.state = "RIBBON";
+    end
+    mng.hideRibbons = function()
+        mng.state = "SHOP";
+    end
+
     mng.update = function()
-        game.endscreen.update();
-        mng.sellButton.inputUpdate(0,0);
-        mng.rollButton.inputUpdate(0,0);
-        mng.endButton.inputUpdate(0,0);
-        for i=1,#mng.emptySlots,1 do
-            local slot = mng.emptySlots[i];
-            if not slot then break; end
-            slot.inputUpdate(0,0);
+        if mng.state == "RIBBON" then
+            mng.ribbonscreen.update();
+        else
+            game.endscreen.update();
+            mng.sellButton.inputUpdate(0,0);
+            mng.rollButton.inputUpdate(0,0);
+            mng.endButton.inputUpdate(0,0);
+            mng.pawButton.inputUpdate(0,0);
+            for i=1,#mng.emptySlots,1 do
+                local slot = mng.emptySlots[i];
+                if not slot then break; end
+                slot.inputUpdate(0,0);
+            end
         end
         mng.updateInput();
     end
     mng.draw = function()
         mng.sellButton.draw();
         mng.rollButton.draw();
+        mng.pawButton.draw();
         pushColor();
         love.graphics.setColor(1,0.38,0);
         love.graphics.draw(dice[game.run.tier],12,474);
@@ -508,6 +529,9 @@ Manager = function()
             love.graphics.setColor(0.95,0.33,0,1);
             love.graphics.print("" .. mng.selectedPet.getSellPrice(),mng.sellButton.x + 42,mng.sellButton.y + 45);
             popColor();
+        end
+        if mng.state == "RIBBON" then
+            mng.ribbonscreen.draw();
         end
     end
     mng.extras = Array();

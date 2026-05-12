@@ -19,6 +19,7 @@ smallfont:setLineHeight(0.8);
 smallfont_bold = love.graphics.newFont("fonts/OpenDyslexic3-Bold.ttf",12);
 smallfont_bold:setLineHeight(0.8);
 
+require("json4lua");
 require("util");
 require("canvas-stack");
 require("asyn");
@@ -38,6 +39,7 @@ require("shops");
 require("field");
 require("run");
 require("battle");
+require("ribbons");
 require("manager");
 require("endscreen");
 require("game");

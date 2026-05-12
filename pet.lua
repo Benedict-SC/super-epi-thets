@@ -1,4 +1,4 @@
-Pet = function(id) 
+Pet = function(id,wailing) 
     local pet = Clickable();
     pet.id = id;
     pet.battlesFought = 0;
@@ -17,6 +17,9 @@ Pet = function(id)
     pet.tempHp = 0;
 
     pet.imgUrl = sourcePet.img;
+    if wailing then
+        pet.imgUrl = string.gsub(pet.imgUrl,"char/","char/wailmer/");
+    end
     pet.img = love.graphics.newImage(pet.imgUrl);
     pet.projectileUrl = "img/rock.png";
     pet.x = 0;
@@ -164,7 +167,7 @@ Pet = function(id)
 
     end
     pet.getCopy = function()
-        local newPet = Pet(pet.id);
+        local newPet = Pet(pet.id,pet.wailmer);
         newPet.atk = pet.atk + pet.tempAtk;
         newPet.hp = pet.hp + pet.tempHp;
         newPet.xp = pet.xp;
@@ -175,6 +178,7 @@ Pet = function(id)
         newPet.perk = pet.perk.copy();
         newPet.perk.owner = newPet;
         newPet.original = pet;
+        newPet.wailmer = pet.wailmer;
         return newPet;
     end
     pet.triggerOne = function(triggerType,args,done,defer)
@@ -537,7 +541,11 @@ Pet = function(id)
         local template = PetMap[newId];
         pet.id = newId;
         pet.name = template.name;
-        pet.img = love.graphics.newImage(template.img);
+        local imgurl = template.img;
+        if pet.wailmer then
+            imgurl = string.gsub(imgurl,"char/","char/wailmer/");
+        end
+        pet.img = love.graphics.newImage(imgurl);
         pet.tier = template.tier;
         giveAbilitiesToPet(pet);
     end
@@ -885,6 +893,15 @@ PetMap["spellingbee"] = {
     tier = 4;
     gender = "m";
 }
+PetMap["wailmer"] = {
+    id="wailmer";
+    name = "Wailmer";
+    atk = 9;
+    hp = 1;
+    img = "img/char/wailmer.png";
+    tier = 4;
+    gender = "m";
+}
 PetMap["indus"] = {
     id="indus";
     name = "Indus";
@@ -1060,8 +1077,14 @@ PetMap["rick"] = {
     gender = "m"; 
 }
 PetTiers = {Array(),Array(),Array(),Array(),Array(),Array()};
+RibbonTiers = {Array(),Array(),Array(),Array(),Array(),Array()};
 for k,v in pairs(PetMap) do
     if not v.notBuyable then
         PetTiers[v.tier].push(k);
+        local ribbCopy = shallowcopy(v);
+        ribbCopy.ribbon = false;
+        ribbCopy.sticker = false;
+        ribbCopy.loadedImg = love.graphics.newImage(ribbCopy.img);
+        RibbonTiers[v.tier].push(ribbCopy);
     end
 end

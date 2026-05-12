@@ -199,7 +199,7 @@ Battle = function(friendly,enemy)
             if frontEnemy.perk.id == "pepper" and (not frontEnemy.isMollywhopped()) and frontEnemy.hp < 1 then
                 frontEnemy.hp = 1;
             end
-            sound.randomSmack();
+            --sound.randomSmack();
             asyn.doOverTime(0.3,function(percent)
                 frontFriendly.x = dist - (dist*percent);
                 frontEnemy.x = (-1*dist) + (dist*percent);
@@ -323,6 +323,14 @@ Battle = function(friendly,enemy)
             if game.run.lives <= 0 then
                 game.endscreen.trigger(false);
             elseif game.run.wins >= 10 then
+                local pets = game.savedTeam.getAllPets();
+                pets.forEach(function(el) 
+                    game.manager.ribbonscreen.earnSticker(el.id);
+                    if el.level == 3 then
+                        game.manager.ribbonscreen.earnRibbon(el.id);
+                    end
+                end);
+                game.manager.ribbonscreen.save();
                 game.endscreen.trigger(true);
             else
             --replace teams with original teams;

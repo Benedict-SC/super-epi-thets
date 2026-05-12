@@ -1,7 +1,7 @@
 TeamBuilder = function()
     local tb = {};
     tb.init = function()
-        tb.winPoints = 0; 
+        tb.winPoints = 30; 
         tb.lossPenalties = 0;
     end
     tb.generateEnemyTeam = function(turn,wins,losses)
