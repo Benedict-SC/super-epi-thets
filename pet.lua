@@ -293,11 +293,11 @@ Pet = function(id,wailing)
             love.graphics.setColor(1,1,1);
         end
         --info box
+        local nudge = 0;
+        if xoff - 100 < 5 then
+            nudge = 5 - (xoff-100);
+        end
         if pet.hovered then
-            local nudge = 0;
-            if xoff - 100 < 5 then
-                nudge = 5 - (xoff-100);
-            end
             love.graphics.setColor(0,0,0);
             love.graphics.rectangle("fill",xoff+nudge - 100,yoff-130,300,110);
             love.graphics.setColor(1,1,1);
@@ -312,6 +312,19 @@ Pet = function(id,wailing)
                 love.graphics.setFont(smallfont_bold);
                 local abText = pet.abilityText[pet.level];
                 love.graphics.printf(abText,xoff+nudge-90,yoff-90,280);
+                love.graphics.setFont(mainfont);
+            end
+        end
+        --perk infobox
+        if pet.hovered and (pet.perk.id ~= "default") then
+            love.graphics.setColor(0,0,0);
+            love.graphics.rectangle("fill",xoff+100+nudge - 100,yoff-30,250,60);
+            love.graphics.setColor(1,1,1);
+            love.graphics.rectangle("fill",xoff+100+nudge - 95,yoff-25,240,50);
+            love.graphics.setColor(0,0,0);
+            if pet.perk.effectText then
+                love.graphics.setFont(smallfont_bold);
+                love.graphics.printf("Perk - " .. pet.perk.name .. " - " .. pet.perk.effectText,xoff+nudge+10,yoff-28,230);
                 love.graphics.setFont(mainfont);
             end
         end

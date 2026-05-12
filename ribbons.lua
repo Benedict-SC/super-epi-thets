@@ -10,14 +10,16 @@ Ribbons = function()
     r.back.y = 3;
     r.load = function()
         local savefile = love.filesystem.read("superepithets_save.json");
-        local savedCheevos = json.decode(savefile);
-        for i=1,6,1 do
-            local tier = RibbonTiers[i];
-            for j=1,#tier,1 do
-                --update ribbon and sticker status from file
-                local rpet = tier[j];
-                rpet.ribbon = savedCheevos[rpet.id].ribbon;
-                rpet.sticker = savedCheevos[rpet.id].sticker;
+        if savefile then
+            local savedCheevos = json.decode(savefile);
+            for i=1,6,1 do
+                local tier = RibbonTiers[i];
+                for j=1,#tier,1 do
+                    --update ribbon and sticker status from file
+                    local rpet = tier[j];
+                    rpet.ribbon = savedCheevos[rpet.id].ribbon;
+                    rpet.sticker = savedCheevos[rpet.id].sticker;
+                end
             end
         end
     end

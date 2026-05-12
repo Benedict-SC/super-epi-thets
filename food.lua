@@ -3,6 +3,7 @@ Food = function(id)
     food.id = id;
     local sourceFood = FoodMap[id];
     food.name = sourceFood.name;
+    food.effectText = sourceFood.effectText;
     food.tier = sourceFood.tier;
     food.eat = sourceFood.eat;
     food.frozen = false;
@@ -41,6 +42,21 @@ Food = function(id)
                     love.graphics.setColor(1,1,1,0.5);
                 end
                 love.graphics.draw(arrow,xoff + 80 + food.x,yoff-20);
+            end
+            if food.hovered then
+                love.graphics.setColor(0,0,0);
+                love.graphics.rectangle("fill",xoff - 100,yoff-130,300,110);
+                love.graphics.setColor(1,1,1);
+                love.graphics.rectangle("fill",xoff - 95,yoff-125,290,100);
+                love.graphics.draw(dice[food.tier],xoff-96,yoff-126);
+                love.graphics.setColor(1,0.29,0);
+                love.graphics.print(food.name,xoff - 52,yoff-129);
+                love.graphics.setColor(0,0,0);
+                if food.effectText then
+                    love.graphics.setFont(smallfont_bold);
+                    love.graphics.printf(food.name .. " - " .. food.effectText,xoff-90,yoff-90,280);
+                    love.graphics.setFont(mainfont);
+                end
             end
         end
         love.graphics.setColor(1,1,1);
