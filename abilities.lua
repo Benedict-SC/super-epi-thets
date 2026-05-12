@@ -655,7 +655,7 @@ giveAbilitiesToPet = function(pet)
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
     elseif pet.id == "wailmer" then
         pet.faint = function(done)
-            if game.manager.battle then
+            if game.manager.battle and pet.original then
                 local pickedTier = math.random(6);
                 local idsAvailable = PetTiers[pickedTier];
                 local petId = idsAvailable[math.random(#idsAvailable)];
@@ -874,8 +874,10 @@ giveAbilitiesToPet = function(pet)
                     game.manager.animateThrow(pet,apRef,"img/heartfulpunch.png",function()
                         apRef.atk = apRef.atk + pet.level;
                         apRef.hp = apRef.hp + (2*pet.level);
-                        apRef.original.atk = apRef.original.atk + pet.level;
-                        apRef.original.hp = apRef.original.hp + (2*pet.level);
+                        if apRef.original then
+                            apRef.original.atk = apRef.original.atk + pet.level;
+                            apRef.original.hp = apRef.original.hp + (2*pet.level);
+                        end
                         next();
                     end)
                 end
