@@ -118,33 +118,37 @@ Battle = function(friendly,enemy)
         local frontEnemy = battle.enemy.get(5);
         local actions = Array();
 
-        if frontFriendly.atk >= frontEnemy.atk then
-            frontEnemy.allAbilities().forEach(function(el) 
-                if el.id == "beforeAttack" then
-                    game.abilityStack.registerAbilityTrigger(frontEnemy,"beforeAttack",el.func,frontFriendly);
-                end
-            end)
-            frontFriendly.allAbilities().forEach(function(el) 
-                if el.id == "beforeAttack" then
-                    game.abilityStack.registerAbilityTrigger(frontFriendly,"beforeAttack",el.func,frontEnemy);
-                end
-            end)
-        else
-            frontFriendly.allAbilities().forEach(function(el) 
-                if el.id == "beforeAttack" then
-                    game.abilityStack.registerAbilityTrigger(frontFriendly,"beforeAttack",el.func,frontEnemy);
-                end
-            end)
-            frontEnemy.allAbilities().forEach(function(el) 
-                if el.id == "beforeAttack" then
-                    game.abilityStack.registerAbilityTrigger(frontEnemy,"beforeAttack",el.func,frontFriendly);
-                end
-            end)
+        if frontFriendly and frontEnemy then
+            if frontFriendly.atk >= frontEnemy.atk then
+                frontEnemy.allAbilities().forEach(function(el) 
+                    if el.id == "beforeAttack" then
+                        game.abilityStack.registerAbilityTrigger(frontEnemy,"beforeAttack",el.func,frontFriendly);
+                    end
+                end)
+                frontFriendly.allAbilities().forEach(function(el) 
+                    if el.id == "beforeAttack" then
+                        game.abilityStack.registerAbilityTrigger(frontFriendly,"beforeAttack",el.func,frontEnemy);
+                    end
+                end)
+            else
+                frontFriendly.allAbilities().forEach(function(el) 
+                    if el.id == "beforeAttack" then
+                        game.abilityStack.registerAbilityTrigger(frontFriendly,"beforeAttack",el.func,frontEnemy);
+                    end
+                end)
+                frontEnemy.allAbilities().forEach(function(el) 
+                    if el.id == "beforeAttack" then
+                        game.abilityStack.registerAbilityTrigger(frontEnemy,"beforeAttack",el.func,frontFriendly);
+                    end
+                end)
+            end
         end
         game.abilityStack.startProcessing(function()
             battle.processFainting(function() 
                 battle.resolveStep(function() 
-                    if frontFriendly.fainted or frontEnemy.fainted then
+                    if not (frontFriendly and frontEnemy) then
+                        battle.roundEnd()
+                    elseif frontFriendly.fainted or frontEnemy.fainted then
                         battle.roundEnd() 
                     else
                         battle.attack() 
@@ -275,6 +279,9 @@ Battle = function(friendly,enemy)
                 target.losePerk();
             elseif ((target.perk.id == "melon") or (target.perk.id == "coconut") or (target.perk.id == "ambrosia")) and (not target.isMollywhopped()) then
                 target.losePerk();
+            end
+            if target.hp <= 0 then
+                target.fainted = true;
             end
             if totalDamage == 0 then
                 done();

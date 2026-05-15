@@ -5,13 +5,13 @@ gameheight=580;
 windowwidth=gamewidth;
 windowheight=gameheight;
 love.window.setTitle("Super Epi Thets");
-love.window.setMode(gamewidth,gameheight,{
+--[[love.window.setMode(gamewidth,gameheight,{
 	fullscreen=false;
 	resizable=true;
 	--x=screenwidth/2 - (gamewidth*2/2);
 	--y=screenheight/2 - (gameheight*2/2);
 	
-});
+});]]--
 mainfont = love.graphics.newFont("fonts/OpenDyslexic3-Bold.ttf",20);
 love.graphics.setFont(mainfont);
 smallfont = love.graphics.newFont("fonts/OpenDyslexic3-Regular.ttf",12);

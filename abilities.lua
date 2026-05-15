@@ -138,21 +138,27 @@ giveAbilitiesToPet = function(pet)
         end
         pet.abilities = ArrayFromRawArray({{id="beforeAttack",func = pet.beforeAttack}})
     elseif pet.id == "martin" then
+        pet.timesEarned = 0;
         pet.friendGainedAilment = function(done,friend)
-            if not pet.enemy then
-                game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
-            end
-            local pos = pet.screenCenter();
-            local coin = {img=love.graphics.newImage("img/coin.png"),x=pos.x+50,y=pos.y};
-            game.manager.extras.push(coin);
-            asyn.doOverTime(0.4,function(percent) 
-                coin.y = math.floor(pos.y - (percent*60));
-            end,function() 
-                asyn.wait(0.2,function() 
-                    game.manager.extras.removeElement(coin);
-                    done();
+            if pet.timesEarned < 3 then
+                pet.timesEarned = pet.timesEarned + 1;
+                if not pet.enemy then
+                    game.run.extraGoldNextTurn = game.run.extraGoldNextTurn + pet.level;
+                end
+                local pos = pet.screenCenter();
+                local coin = {img=love.graphics.newImage("img/coin.png"),x=pos.x+50,y=pos.y};
+                game.manager.extras.push(coin);
+                asyn.doOverTime(0.4,function(percent) 
+                    coin.y = math.floor(pos.y - (percent*60));
+                end,function() 
+                    asyn.wait(0.2,function() 
+                        game.manager.extras.removeElement(coin);
+                        done();
+                    end)
                 end)
-            end)
+            else
+                done();
+            end
         end
         pet.abilities = ArrayFromRawArray({{id="friendGainedAilment",func = pet.friendGainedAilment}})
     elseif pet.id == "gansley" then
@@ -1116,9 +1122,9 @@ getAbilityText = function(id)
         }
     elseif id == "martin" then
         return {
-            "Friend gained ailment: Gain 1 gold next turn.",
-            "Friend gained ailment: Gain 2 gold next turn.",
-            "Friend gained ailment: Gain 3 gold next turn.",
+            "Friend gained ailment: Gain 1 gold next turn. Triggers 3 times per turn.",
+            "Friend gained ailment: Gain 2 gold next turn. Triggers 3 times per turn.",
+            "Friend gained ailment: Gain 3 gold next turn. Triggers 3 times per turn.",
         }
     elseif id == "gansley" then
         return {
@@ -1338,9 +1344,9 @@ getAbilityText = function(id)
         }
     elseif id == "exit" then
         return {
-            "Before battle: If no adjacent friends, gain 6 attack and HP.",
-            "Before battle: If no adjacent friends, gain 12 attack and HP.",
-            "Before battle: If no adjacent friends, gain 18 attack and HP."
+            "Before battle: This and a Random enemy pet of tier 2 or less exit the battle.",
+            "Before battle: This and a Random enemy pet of tier 4 or less exit the battle.",
+            "Before battle: This and a Random enemy pet of tier 6 or less exit the battle."
         }
     elseif id == "justy" then
         return {

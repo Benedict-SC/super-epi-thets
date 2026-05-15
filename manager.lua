@@ -112,6 +112,9 @@ Manager = function()
                     game.abilityStack.registerAbilityTrigger(pet,"startOfTurn",el.func,args);
                 end
             end);
+            if pet.timesEarned then
+                pet.timesEarned = 0;
+            end
         end
         game.abilityStack.startProcessing(function()
             mng.state = "SHOP";
