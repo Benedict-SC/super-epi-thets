@@ -107,7 +107,7 @@ giveAbilitiesToPet = function(pet)
             local toast1Func = function(next)
                 game.manager.animateThrow(pet,opponent,nil,function()
                     opponent.gainPerk(toasty1,next,true);
-                end)
+                end, 0.2)
             end
             sequentialToasts.push(toast1Func);
             if pet.level > 1 then
@@ -466,7 +466,7 @@ giveAbilitiesToPet = function(pet)
         pet.friendHurt = function(done,friendAndSource)
             local friend = friendAndSource.friend;
             local source = friendAndSource.source;
-            if source and (friend.getIndex() < pet.getIndex()) then
+            if source and (friend.getIndex() < pet.getIndex()) and (source.hp > 0) then
                 game.manager.battle.dealDirectDamage(3*pet.level,pet,source,done);
             else
                 done();
@@ -477,7 +477,7 @@ giveAbilitiesToPet = function(pet)
         pet.friendHurt = function(done,friendAndSource)
             local friend = friendAndSource.friend;
             local source = friendAndSource.source;
-            if source and (friend.getIndex() > pet.getIndex()) then
+            if source and (friend.getIndex() > pet.getIndex()) and (source.hp > 0) then
                 game.manager.battle.dealDirectDamage(pet.level,pet,source,done);
             else
                 done();
