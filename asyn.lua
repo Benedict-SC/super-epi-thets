@@ -1,9 +1,20 @@
 asyn = {};
 asyn.updates = Array();
+--everything in here runs on asyn's own clock, which advances at timeScale
+--times real time. set timeScale to speed up or slow down all animations.
+asyn.timeScale = 1;
+asyn.clock = 0;
+asyn.lastRealTime = love.timer.getTime();
+asyn.getTime = function()
+	return asyn.clock;
+end
 asyn.registerFunction = function(funcobj)
 	asyn.updates.push(funcobj);
 end
 asyn.update = function()
+	local now = love.timer.getTime();
+	asyn.clock = asyn.clock + ((now - asyn.lastRealTime) * asyn.timeScale);
+	asyn.lastRealTime = now;
 	for i=1,#(asyn.updates),1 do
 		if not (asyn.updates[i].cancel )then	
 			asyn.updates[i].func();
@@ -21,7 +32,7 @@ end
 
 asyn.doForever = function(eternalfunc) 
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	updater.finish = function() end
 	updater.func = eternalfunc;
 	updater.done = false;
@@ -30,14 +41,14 @@ asyn.doForever = function(eternalfunc)
 end
 asyn.doEveryXSecsForever = function(eternalfunc,secs)
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	updater.lastLoop = updater.startTime;
 	updater.finish = function() end
 	updater.func = function()
-		local elapsed = love.timer.getTime() - updater.lastLoop;
+		local elapsed = asyn.getTime() - updater.lastLoop;
 		if elapsed > secs then
 			eternalfunc();
-			updater.lastLoop = love.timer.getTime() - (elapsed - secs); --offset by how late the actual update was
+			updater.lastLoop = asyn.getTime() - (elapsed - secs); --offset by how late the actual update was
 		end
 	end
 	updater.done = false;
@@ -46,7 +57,7 @@ asyn.doEveryXSecsForever = function(eternalfunc,secs)
 end
 asyn.doEveryXSecsFor = function(func,secs,duration,funcwhendone)
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	updater.lastLoop = updater.startTime;
 	if funcwhendone then
 		updater.finish = funcwhendone;
@@ -54,12 +65,12 @@ asyn.doEveryXSecsFor = function(func,secs,duration,funcwhendone)
 		updater.finish = function() end
 	end
 	updater.func = function()
-		local elapsed = love.timer.getTime() - updater.lastLoop;
+		local elapsed = asyn.getTime() - updater.lastLoop;
 		if elapsed > secs then
 			eternalfunc();
-			updater.lastLoop = love.timer.getTime() - (elapsed - secs); --offset by how late the actual update was
+			updater.lastLoop = asyn.getTime() - (elapsed - secs); --offset by how late the actual update was
 		end
-		if (love.timer.getTime() - updater.startTime) > duration then
+		if (asyn.getTime() - updater.startTime) > duration then
 			updater.finish();
 		end
 	end
@@ -72,7 +83,7 @@ asyn.movePlayerOverTime = function(x,y,secs,funcwhendone)
 	game.player.updateSprite(x,y);
 	game.player.state = "NOCONTROL";
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	updater.startPoint = {x=game.player.x,y=game.player.y};
 	if funcwhendone then
 		updater.finish = funcwhendone;
@@ -80,7 +91,7 @@ asyn.movePlayerOverTime = function(x,y,secs,funcwhendone)
 		updater.finish = function() end
 	end
 	updater.func = function()
-		local timeElapsed = love.timer.getTime() - updater.startTime;
+		local timeElapsed = asyn.getTime() - updater.startTime;
 		local percentMoved = timeElapsed/secs;
 		updater.done = percentMoved >= 1;
 		if updater.done then percentMoved = 1; end
@@ -99,7 +110,7 @@ asyn.movePlayerOverTime = function(x,y,secs,funcwhendone)
 end
 asyn.moveCameraOverTime = function(x,y,secs,funcwhendone)
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	updater.startPoint = {x=game.room.camera.x,y=game.room.camera.y};
 	if funcwhendone then
 		updater.finish = funcwhendone;
@@ -107,7 +118,7 @@ asyn.moveCameraOverTime = function(x,y,secs,funcwhendone)
 		updater.finish = function() end
 	end
 	updater.func = function()
-		local timeElapsed = love.timer.getTime() - updater.startTime;
+		local timeElapsed = asyn.getTime() - updater.startTime;
 		local percentMoved = timeElapsed/secs;
 		updater.done = percentMoved >= 1;
 		if updater.done then percentMoved = 1; end
@@ -125,7 +136,7 @@ asyn.moveCameraOverTime = function(x,y,secs,funcwhendone)
 end
 asyn.moveThingOverTime = function(thing,x,y,secs,funcwhendone)
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	updater.startPoint = {x=thing.x,y=thing.y};
 	if funcwhendone then
 		updater.finish = funcwhendone;
@@ -133,7 +144,7 @@ asyn.moveThingOverTime = function(thing,x,y,secs,funcwhendone)
 		updater.finish = function() end
 	end
 	updater.func = function()
-		local timeElapsed = love.timer.getTime() - updater.startTime;
+		local timeElapsed = asyn.getTime() - updater.startTime;
 		local percentMoved = timeElapsed/secs;
 		updater.done = percentMoved >= 1;
 		if updater.done then percentMoved = 1; end
@@ -152,14 +163,14 @@ end
 
 asyn.wait = function(secs,funcwhendone)
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	if funcwhendone then
 		updater.finish = funcwhendone;
 	else 
 		updater.finish = function() end
 	end
 	updater.func = function()
-		local timeElapsed = love.timer.getTime() - updater.startTime;
+		local timeElapsed = asyn.getTime() - updater.startTime;
 		updater.done = timeElapsed >= secs;
 		if updater.done then 
 			updater.finish();
@@ -171,7 +182,7 @@ asyn.wait = function(secs,funcwhendone)
 end
 asyn.moveAtSpeedOverDistance = function(thing,pixPerSec,xdist,ydist,checkColl,funcwhendone)
 	local updater = {};
-	updater.lastTime = love.timer.getTime();
+	updater.lastTime = asyn.getTime();
 	updater.mover = thing;
 	updater.xTraveled = 0;
 	updater.yTraveled = 0;
@@ -189,8 +200,8 @@ asyn.moveAtSpeedOverDistance = function(thing,pixPerSec,xdist,ydist,checkColl,fu
 	end
 	updater.func = function()
 		--compute how far to move this step
-		local timeDelta = love.timer.getTime() - updater.lastTime;
-		updater.lastTime = love.timer.getTime();
+		local timeDelta = asyn.getTime() - updater.lastTime;
+		updater.lastTime = asyn.getTime();
 		local xstep = updater.xspeed * timeDelta;
 		local ystep = updater.yspeed * timeDelta;
 		if (math.abs(updater.xTraveled + xstep) >= math.abs(updater.xdist)) and (math.abs((updater.yTraveled + ystep)) > math.abs(updater.ydist)) then
@@ -237,7 +248,7 @@ end
 
 asyn.doOverTime = function(secs,everyFrame,funcwhendone)
 	local updater = {};
-	updater.startTime = love.timer.getTime();
+	updater.startTime = asyn.getTime();
 	if funcwhendone then
 		updater.finish = funcwhendone;
 	else 
@@ -245,7 +256,7 @@ asyn.doOverTime = function(secs,everyFrame,funcwhendone)
 	end
 	updater.everyFrame = everyFrame;
 	updater.func = function()
-		local timeElapsed = love.timer.getTime() - updater.startTime;
+		local timeElapsed = asyn.getTime() - updater.startTime;
 		local percent = timeElapsed/secs;
 		updater.done = percent >= 1;
 		if updater.done then percent = 1; end

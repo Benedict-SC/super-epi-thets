@@ -44,6 +44,45 @@ Team = function()
         team.listBackToFront[newPos] = pet;
         team.listBackToFront[petIndex] = nil;
     end
+    --shifts pets toward the nearest empty slot so that pos becomes empty.
+    --the list is updated immediately; the slide is purely visual.
+    team.makeRoomAt = function(pos)
+        if not team.listBackToFront[pos] then
+            return true;
+        end
+        local emptyPos = nil;
+        for dist=1,4,1 do
+            if pos - dist >= 1 and not team.listBackToFront[pos - dist] then
+                emptyPos = pos - dist;
+                break;
+            end
+            if pos + dist <= 5 and not team.listBackToFront[pos + dist] then
+                emptyPos = pos + dist;
+                break;
+            end
+        end
+        if not emptyPos then
+            return false;
+        end
+        local step = (emptyPos < pos) and -1 or 1;
+        local spacing = team.faceRight and 100 or -100;
+        for i=emptyPos,pos+step,-step do
+            local pet = team.listBackToFront[i-step];
+            team.listBackToFront[i] = pet;
+            team.listBackToFront[i-step] = nil;
+            if pet.slideTween then
+                pet.slideTween.cancel = true;
+            end
+            local startX = pet.x - (step * spacing);
+            pet.slideTween = asyn.doOverTime(0.08,function(percent)
+                pet.x = math.floor(startX * (1 - percent));
+            end,function()
+                pet.x = 0;
+                pet.slideTween = nil;
+            end);
+        end
+        return true;
+    end
     team.lineUp = function(done)
         for i=4,1,-1 do
             local pet = team.listBackToFront[i];

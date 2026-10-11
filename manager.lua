@@ -293,7 +293,7 @@ Manager = function()
         mng.cleanupDrag();
     end
     mng.updateInput = function()
-        if (mng.hideUI and (mng.state ~= "ENDING")) or (mng.state ~= "SHOP" and mng.state ~= "RIBBON" and mng.state ~= "BATTLE" and mng.state ~= "ANIMATE" and mng.state ~= "ENDING") then
+        if (mng.hideUI and (mng.state ~= "ENDING") and not mng.battle) or (mng.state ~= "SHOP" and mng.state ~= "RIBBON" and mng.state ~= "BATTLE" and mng.state ~= "ANIMATE" and mng.state ~= "ENDING") then
             mng.setHovered(nil);
             mng.pointer.pressed = nil;
             mng.pointer.rightPressed = nil;
@@ -460,6 +460,33 @@ Manager = function()
         mng.removeEmptySlots();
     end
 
+    --dragging a shop pet over a team pet it can't combine with slides
+    --the team aside to open up that slot (if there's room)
+    mng.slideForDraggedPet = function(target)
+        local source = mng.draggingPet;
+        if mng.state ~= "SHOP" or not source or not source.fromShop then
+            return;
+        end
+        --graham needs to be dropped on unlike pets to be eaten
+        if source.id == "graham" then
+            return;
+        end
+        if target == source or target.fromShop then
+            return;
+        end
+        if target.name == source.name and target.level < 3 then
+            return;
+        end
+        if game.team.isFull() then
+            return;
+        end
+        local pos = target.getIndexOnTeam(game.team);
+        if pos > 0 and game.team.makeRoomAt(pos) then
+            mng.removeEmptySlots();
+            mng.configureEmptySlots();
+        end
+    end
+
     mng.emptySlots = Array();
     mng.configureEmptySlots = function()
         for i=1,5,1 do
@@ -483,7 +510,12 @@ Manager = function()
     end
 
     mng.update = function()
-        if mng.state == "RIBBON" then
+        if mng.battle then
+            --the team and shop underneath still register themselves, but
+            --during battle only the battle's own controls take input
+            mng.beginInputFrame();
+            mng.battle.inputUpdate();
+        elseif mng.state == "RIBBON" then
             mng.ribbonscreen.update();
         else
             game.endscreen.update();
@@ -498,6 +530,7 @@ Manager = function()
             end
         end
         mng.updateInput();
+        asyn.timeScale = mng.battle and mng.battle.getTimeScale() or 1;
     end
     mng.draw = function()
         mng.sellButton.draw();

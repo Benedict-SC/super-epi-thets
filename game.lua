@@ -51,6 +51,7 @@ Game = function()
     --game.run.gold = 99;
 
     game.fadeAlpha = 0;
+    game.fastMode = false;
 
     game.init = function()
         game.petShop.roll(1);

@@ -297,6 +297,10 @@ Pet = function(id,wailing)
         if xoff - 100 < 5 then
             nudge = 5 - (xoff-100);
         end
+        --the perk box extends furthest right, to xoff+250
+        if xoff + 250 > gamewidth - 5 then
+            nudge = (gamewidth - 5) - (xoff + 250);
+        end
         if pet.hovered then
             love.graphics.setColor(0,0,0);
             love.graphics.rectangle("fill",xoff+nudge - 100,yoff-130,300,110);
@@ -339,6 +343,9 @@ Pet = function(id,wailing)
         if game.manager.state == "SHOP" then
             game.manager.dragPet(pet);
         end
+    end
+    pet.onHoverEnter = function()
+        game.manager.slideForDraggedPet(pet);
     end
     pet.onClick = function()
         if game.manager.state == "SHOP" then

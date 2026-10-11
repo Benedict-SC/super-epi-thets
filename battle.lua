@@ -461,12 +461,37 @@ Battle = function(friendly,enemy)
             game.abilityStack.startProcessing(done);
         end
     end
+    battle.fastButton = Button("img/fastmode.png");
+    battle.fastButton.x = game.manager.sellButton.x;
+    battle.fastButton.y = game.manager.sellButton.y;
+    battle.fastButton.check = love.graphics.newImage("img/fastmode_check.png");
+    battle.fastButton.onClick = function()
+        game.fastMode = not game.fastMode;
+    end
+    --pets are registered only so they can be hovered for their info box.
+    --their click/drag handlers are all shop-only, so they do nothing here.
+    battle.inputUpdate = function()
+        battle.friendly.update();
+        battle.enemy.update();
+        battle.fastButton.inputUpdate(0,0);
+    end
+    battle.getTimeScale = function()
+        local hovered = game.manager.pointer.hovered;
+        if hovered and hovered.dragKind == "pet" then
+            return 0.1;
+        end
+        return game.fastMode and 2 or 1;
+    end
     battle.extras = Array();
     battle.draw = function()
         for i=1,#battle.extras,1 do
             local extra = battle.extras[i];
             if not extra then break; end
             love.graphics.draw(extra.img,extra.x,extra.y);
+        end
+        battle.fastButton.draw();
+        if game.fastMode then
+            love.graphics.draw(battle.fastButton.check,battle.fastButton.x,battle.fastButton.y);
         end
     end
 
