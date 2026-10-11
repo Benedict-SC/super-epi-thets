@@ -6,6 +6,8 @@ EndScreen = function()
     es.newgame.onClick = function()
         game.run = Run();
         game.team = Team();
+        game.itemShop = ItemShop();
+        game.petShop = PetShop();
         asyn.doOverTime(1.3,function(percent)
             es.alpha = 1-percent;
         end,function() 
